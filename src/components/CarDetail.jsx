@@ -1,0 +1,222 @@
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from "../config/supabase";
+
+const formatPrice = (price) => {
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+};
+
+function CarDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [car, setCar] = useState(null);
+  const [modalImg, setModalImg] = useState(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchCar = async () => {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error("Erreur lors de la récupération de la voiture:", error);
+        window.addToast('Erreur lors du chargement de la voiture', 'error');
+        return;
+      }
+
+      if (data) {
+        const carData = { id: data.id, ...data };
+        carData.description = carData.description || '';
+        setCar(carData);
+      }
+    };
+    fetchCar();
+  }, [id]);
+
+  const handlePrevMedia = () => {
+    setCurrentMediaIndex((prev) => (prev === 0 ? car.medias.length - 1 : prev - 1));
+  };
+
+  const handleNextMedia = () => {
+    setCurrentMediaIndex((prev) => (prev === car.medias.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleAddToFavorites = () => {
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    if (!favorites.includes(id)) {
+      favorites.push(id);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      window.addToast('Voiture ajoutée aux favoris !', 'success');
+      setTimeout(() => navigate('/favorites'), 100);
+    } else {
+      window.addToast('Cette voiture est déjà dans vos favoris !', 'error');
+    }
+  };
+
+  if (!car) {
+    return (
+      <div className="container mx-auto p-4 text-white text-center bg-gray-900 min-h-screen">
+        Chargement...
+      </div>
+    );
+  }
+
+  const productUrl = window.location.href;
+  const whatsappMessage = `Bonjour, je suis intéressé par :%0A%0A- Marque : ${car.marque}%0A- Modèle : ${car.modele}%0A- Année : ${car.annee}%0A- Prix : ${formatPrice(car.prix)}%0A%0ALien du produit : ${productUrl}`;
+
+  return (
+    <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 sm:mb-6 text-gold text-lg font-semibold flex items-center hover:text-yellow-400 transition"
+      >
+        <span className="mr-2 text-xl">←</span> Retour
+      </button>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1">
+          <div className="bg-white p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
+            <div className="relative mb-4 sm:mb-6">
+              {car.status === 'acheté' && (
+                <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
+                  Déjà Vendu
+                </div>
+              )}
+              {car.medias?.length >= 3 ? (
+                <div className="relative">
+                  {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
+                    <video
+                      src={car.medias[currentMediaIndex]}
+                      controls
+                      className="w-full aspect-[16/9] object-cover rounded-lg"
+                    />
+                  ) : (
+                    <img
+                      src={car.medias[currentMediaIndex]}
+                      alt={`${car.marque} ${car.modele}`}
+                      className="w-full aspect-[16/9] object-cover rounded-lg cursor-pointer"
+                      onClick={() => setModalImg(car.medias[currentMediaIndex])}
+                      loading="lazy"
+                    />
+                  )}
+                  <button
+                    onClick={handlePrevMedia}
+                    className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                    aria-label="Précédent"
+                  >
+                    <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleNextMedia}
+                    className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                    aria-label="Suivant"
+                  >
+                    <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                    {car.medias.map((url, i) => (
+                      <div
+                        key={i}
+                        className={`w-16 h-16 rounded-md cursor-pointer border-2 ${i === currentMediaIndex ? 'border-gold' : 'border-gray-300'}`}
+                        onClick={() => setCurrentMediaIndex(i)}
+                      >
+                        {url.match(/\.(mp4|webm|ogg)$/i) ? (
+                          <video src={url} className="w-full h-full object-cover rounded-md" />
+                        ) : (
+                          <img src={url} alt={`Miniature ${i + 1}`} className="w-full h-full object-cover rounded-md" loading="lazy" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-4 overflow-x-auto pb-4">
+                  {car.medias?.map((url, i) =>
+                    url.match(/\.(mp4|webm|ogg)$/i) ? (
+                      <video key={i} src={url} controls className="w-full sm:w-1/2 h-40 sm:h-48 object-cover rounded-lg" />
+                    ) : (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`Image ${i + 1}`}
+                        className="w-full sm:w-1/2 h-40 sm:h-48 object-cover rounded-lg cursor-pointer"
+                        onClick={() => setModalImg(url)}
+                        loading="lazy"
+                      />
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gold mb-2">{car.marque} {car.modele}</h1>
+            <div className="text-base sm:text-lg text-gray-800 mb-2">{car.annee} • {car.ville} • {car.carburant} • {car.boite}</div>
+            <div className="text-lg sm:text-xl font-bold text-gold mb-2">{formatPrice(car.prix)}</div>
+            <div className="text-sm text-gray-600 mb-2">{car.type} - {car.sousType}</div>
+            {car.provenance && (
+              <div className="text-sm text-gray-600 mb-2">Provenance : {car.provenance}</div>
+            )}
+            <div className="text-sm sm:text-base text-gray-700 mb-4">{car.description}</div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleAddToFavorites}
+                className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+              >
+                Ajouter aux favoris
+              </button>
+              <a
+                href={`https://wa.me/${car.sellerNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto text-center bg-gold text-black px-4 py-2 sm:py-3 rounded-lg hover:bg-yellow-400 transition font-medium"
+              >
+                Contacter via WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+        {modalImg && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+            <button
+              onClick={() => setModalImg(null)}
+              className="absolute top-4 right-4 text-white text-2xl hover:text-gold transition"
+              aria-label="Fermer la modale"
+            >
+              ×
+            </button>
+            {car.medias?.length >= 3 && (
+              <>
+                <button
+                  onClick={handlePrevMedia}
+                  className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                  aria-label="Précédent"
+                >
+                  <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleNextMedia}
+                  className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                  aria-label="Suivant"
+                >
+                  <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+            <img src={modalImg} alt="Image agrandie" className="max-w-full max-h-[90vh] object-contain" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default CarDetail;

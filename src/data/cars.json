@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "marque": "Toyota",
+    "modele": "Corolla",
+    "annee": 2020,
+    "carburant": "Essence",
+    "type": "Achat",
+    "ville": "Dakar",
+    "pays": "Sénégal",
+    "prix": 8500000,
+    "description": "Toyota Corolla 2020, en excellent état, faible kilométrage.",
+    "image": "https://via.placeholder.com/300x200?text=Toyota+Corolla"
+  },
+  {
+    "id": 2,
+    "marque": "Hyundai",
+    "modele": "Tucson",
+    "annee": 2022,
+    "carburant": "Hybride",
+    "type": "Location",
+    "ville": "Thiès",
+    "pays": "Sénégal",
+    "prix": 30000,
+    "description": "Hyundai Tucson hybride à louer, parfait pour les longs trajets.",
+    "image": "https://imgs.search.brave.com/NPVKMgo1qApBlnmeg25MONhYOG07KUpSMHf7nOjN3KU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWdz/LnNlYXJjaC5icmF2/ZS5jb20vTDh4UWV1/WmxUdjhaTDhBRmZB/aFZ3aE1idFJReGx5/WVdxaHZqZk9GeWdB/RS9yczpmaXQ6NTAw/OjA6MDowL2c6Y2Uv/YUhSMGNITTZMeTkz/ZDNjdS9ZWFYwYjIx/dlltbHNaUzF0L1lX/ZGhlbWx1WlM1bWNp/OWgvYzNObGRDOWpi/WE12TXpnei9lREl6/T1M4eU1qa3lNRGN2/L1kyOXVabWxuTHpF/M05qSTAvT1M5b2VY/VnVaR0ZwTFhSMS9Z/M052Ymkxb2VXSnlh/V1F0L2FXNXBkR2xo/TFRFdWFuQm4"
+  },
+  {
+    "id": 3,
+    "marque": "Peugeot",
+    "modele": "308",
+    "annee": 2019,
+    "carburant": "Diesel",
+    "type": "Achat",
+    "ville": "Saint-Louis",
+    "pays": "Sénégal",
+    "prix": 6500000,
+    "description": "Peugeot 308 2019, très bien entretenue.",
+    "image": "https://via.placeholder.com/300x200?text=Peugeot+308"
+  }
+]
