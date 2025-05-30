@@ -16,7 +16,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.origin === import.meta.env.VITE_SUPABASE_URL,
+            urlPattern: ({ url }) => url.origin === 'https://feqhpxnmhnonrxcvjhwa.supabase.co',
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-api-cache',
@@ -68,6 +68,7 @@ export default defineConfig({
         display: 'standalone',
         scope: '/',
         start_url: '/',
+        id: '/',
         orientation: 'portrait',
         icons: [
           {
@@ -81,6 +82,10 @@ export default defineConfig({
             type: 'image/png',
           },
         ],
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module',
       },
     }),
   ],
