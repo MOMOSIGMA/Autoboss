@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from "../config/supabase";
 import Filters from './Filters';
+import { toast } from 'react-toastify';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -45,6 +46,10 @@ function Home() {
         setCars(data);
       } catch (error) {
         console.error("Error fetching cars:", error);
+        toast.error('Erreur lors du chargement des voitures', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       } finally {
         setLoading(false);
       }
@@ -130,12 +135,23 @@ function Home() {
     );
   };
 
+  const SkeletonCard = () => (
+    <div className="bg-gray-800 p-2 rounded-xl border border-gold shadow animate-pulse">
+      <div className="w-full h-32 bg-gray-700 rounded-lg"></div>
+      <div className="p-1">
+        <div className="h-6 bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-700 rounded w-1/2 mb-1"></div>
+        <div className="h-4 bg-gray-700 rounded w-1/3"></div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container mx-auto p-4 pt-4 relative">
-      <Filters filters={filters} setFilters={setFilters} />
+      <Filters filters={filters} setFilters={setFilters} title="Trier & Filtrer" />
 
       {loading ? (
-        <div className="text-white text-center py-8">Chargement...</div>
+        <div className="text-white text-center py-8 animate-pulse-text">Chargement…</div>
       ) : (
         <>
           {search && (
@@ -167,7 +183,11 @@ function Home() {
               <section>
                 <h2 className="text-xl font-bold text-gold mb-2">Toutes les Voitures</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {paginatedCars.map(car => <CarCard car={car} key={car.id} />)}
+                  {paginatedCars.length > 0 ? (
+                    paginatedCars.map(car => <CarCard car={car} key={car.id} />)
+                  ) : (
+                    Array(carsPerPage).fill().map((_, index) => <SkeletonCard key={index} />)
+                  )}
                 </div>
                 {page * carsPerPage < filteredCars.length && (
                   <button 

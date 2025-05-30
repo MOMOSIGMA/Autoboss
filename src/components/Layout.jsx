@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "../config/supabase";
 import Favorites from './Favorites';
 import ContactForm from './ContactForm';
+import { toast } from 'react-toastify';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -91,7 +92,10 @@ function Layout() {
       const { data, error } = await supabase.from('cars').select('*');
       if (error) {
         console.error(error);
-        window.addToast('Erreur lors du chargement des voitures', 'error');
+        toast.error('Erreur lors du chargement des voitures', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       } else {
         setCars(data);
       }
@@ -116,9 +120,21 @@ function Layout() {
       navigate(`/?q=${encodeURIComponent(search.trim())}`);
       setMenuOpen(false);
       setCurrentPage('Accueil');
-      window.addToast('Recherche effectuée', 'success');
+      toast.success('Recherche effectuée', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     } else {
-      window.addToast('Veuillez entrer un terme de recherche', 'error');
+      toast.error('Veuillez entrer un terme de recherche', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && search.trim()) {
+      handleSearch(e);
     }
   };
 
@@ -146,11 +162,14 @@ function Layout() {
           <form onSubmit={handleSearch} className="flex-1 max-w-lg mx-4">
             <div className="relative">
               <input
-                type="text"
+                type="search"
                 placeholder="Rechercher une voiture..."
                 className="w-full p-2 pl-10 rounded bg-gray-800 text-white border border-gold focus:outline-none focus:ring-2 focus:ring-gold"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyPress={handleKeyPress}
+                autoComplete="off"
+                aria-label="Rechercher une voiture"
               />
               <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg className="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +186,7 @@ function Layout() {
             </a>
             <a href="https://www.tiktok.com/@marchenet_afrique?_t=ZM-8wiF81y7Oa5&_r=1" target="_blank" rel="noopener noreferrer">
               <svg className="h-6 w-6 text-gold hover:text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12.53 0h2.45v6.48c.98-.47 2.02-.74 3.12-.74 3.31 0 6 2.69 6 6s-2.69 6-6 6c-2.88 0-5.26-2.04-5.85-4.72-.04-.2-.06-.4-.06-.61v-6.91c-.01-2.67 2.16-4.84 4.84-4.84.36 0 .71.04 1.05.11V0h-2.45v6.48c-.98-.47-2.02-.74-3.12-.74-3.31 0-6 2.69-6 6s2.69 6 6 6c2.88 0 5.26-2.04 5.85-4.72.04-.2.06-.4.06-.61v-6.91c-.01-2.67-2.16-4.84-4.84-4.84-.36 0-.71.04-1.05.11V0z" />
+                <path d="M16.6 4.8c-0.9-0.7-2-1.1-3.2-1.1-2.5 0-4.5 1.8-4.5 4v3h-2v3h2v7h3v-7h2.6l0.6-3h-3.2v-2c0-0.7 0.6-1.3 1.3-1.3 0.6 0 1.2 0.2 1.6 0.6l1.2-1.2z" />
               </svg>
             </a>
           </div>

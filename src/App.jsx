@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase } from './config/supabase';
-import { Link } from 'react-router-dom'; // Ajout
+import { supabase } from './config/supabase'; // Chemin corrigé
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify'; // Importation de react-toastify
 import Home from './components/Home';
 import CarDetail from './components/CarDetail';
 import Admin from './components/Admin';
@@ -9,7 +10,9 @@ import Layout from './components/Layout';
 import Partners from './components/Partners';
 import Favorites from './components/Favorites';
 import ContactForm from './components/ContactForm';
-import ToastContainer from './components/ToastContainer'; // Ajout
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import "react-datepicker/dist/react-datepicker.css";
 
 function Achat() {
   const [cars, setCars] = useState([]);
@@ -18,7 +21,7 @@ function Achat() {
       const { data, error } = await supabase.from('cars').select('*').eq('type', 'Achat');
       if (error) {
         console.error(error);
-        window.addToast('Erreur lors du chargement des voitures', 'error');
+        toast.error('Erreur lors du chargement des voitures'); // Remplacement de window.addToast
       } else {
         setCars(data);
       }
@@ -63,7 +66,7 @@ function Location() {
       const { data, error } = await supabase.from('cars').select('*').eq('type', 'Location');
       if (error) {
         console.error(error);
-        window.addToast('Erreur lors du chargement des voitures', 'error');
+        toast.error('Erreur lors du chargement des voitures'); // Remplacement de window.addToast
       } else {
         setCars(data);
       }
@@ -104,7 +107,6 @@ function Location() {
 function App() {
   return (
     <BrowserRouter>
-      <ToastContainer />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<><Home /><Partners /></>} />
@@ -116,6 +118,7 @@ function App() {
           <Route path="/location" element={<Location />} />
         </Route>
       </Routes>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
     </BrowserRouter>
   );
 }

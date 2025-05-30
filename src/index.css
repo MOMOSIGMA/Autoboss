@@ -13,9 +13,29 @@
     opacity: 1;
   }
 }
+@keyframes loadingDots {
+  0% { content: "Recherche en cours"; }
+  33% { content: "Recherche en cours."; }
+  66% { content: "Recherche en cours.."; }
+  100% { content: "Recherche en cours..."; }
+}
+
+.loading-text::after {
+  animation: loadingDots 1.5s infinite;
+}
 
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
+}
+
+/* Animation pour le texte de chargement */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-text {
+  animation: pulse 1.5s infinite;
 }
 
 /* Styles pour CarDetail.jsx */
@@ -37,7 +57,7 @@
 .car-detail-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0.9, 0);
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,20 +70,22 @@
   object-fit: contain;
 }
 
-/* Styles existants pour Partners.jsx */
+/* Styles pour Partners.jsx */
+.partners-container {
+  margin-bottom: 1rem; /* Espacement minimal */
+}
+
 .h-24 {
   height: 6rem; /* 96px, ajusté pour deux lignes */
 }
 
 @media (max-width: 639px) {
-  /* Supprimez column-reverse sauf pour les cas spécifiques */
   .partners-container.flex-col {
-    flex-direction: column-reverse; /* Gardez-le uniquement pour les partenaires si nécessaire */
+    flex-direction: column-reverse;
   }
 }
 
 @media (min-width: 640px) {
-  /* Sur desktop, on utilise flex-row avec un hack pour simuler le remplissage bas en haut */
   .sm\:flex-row {
     display: flex;
     flex-wrap: wrap;
@@ -71,16 +93,27 @@
   }
 
   .sm\:w-1\/3 {
-    width: 33.333333%; /* 3 partenaires par ligne */
+    width: 33.333333%;
     box-sizing: border-box;
   }
 }
 
-/* Centrage et espacement uniforme */
 .flex-col > div,
 .sm\:flex-row > div {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-grow: 1;
+}
+
+/* Skeleton styles */
+.skeleton {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

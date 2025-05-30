@@ -1,5 +1,8 @@
-import { useState } from "react";
-// Marques et modèles connus (extrait, tu peux en ajouter d'autres)
+import { useState, useEffect } from "react";
+import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
+
+// Marques et modèles connus
 const MARQUES_MODELES = {
   Toyota: ["Corolla", "Yaris", "Hilux", "Land Cruiser", "Camry", "RAV4", "Avensis", "Prius", "Auris", "C-HR", "Supra", "Verso", "Aygo"],
   Peugeot: ["208", "308", "3008", "508", "2008", "206", "207", "405", "406", "Partner", "Expert", "Boxer"],
@@ -27,7 +30,6 @@ const MARQUES_MODELES = {
   Skoda: ["Fabia", "Octavia", "Superb", "Kodiaq", "Karoq", "Rapid"],
   Volvo: ["V40", "V60", "V90", "XC40", "XC60", "XC90", "S60"],
   Tesla: ["Model S", "Model 3", "Model X", "Model Y", "Roadster"],
-  // ...ajoute d'autres marques selon tes besoins
 };
 
 const MARQUES = Object.keys(MARQUES_MODELES);
@@ -39,7 +41,7 @@ const VILLES = [
 const BOITES = ["Manuelle", "Automatique"];
 const CARBURANTS = ["Essence", "Diesel", "Électrique", "Hybride", "GPL"];
 
-export default function CarForm({ onSubmit, initialData }) {
+export default function CarForm({ onSubmit, initialData, setEditingCar }) {
   const [car, setCar] = useState({
     marque: initialData?.marque || "",
     modele: initialData?.modele || "",
@@ -52,19 +54,69 @@ export default function CarForm({ onSubmit, initialData }) {
     ville: initialData?.ville || "",
     prix: initialData?.prix || "",
     description: initialData?.description || "",
-    files: initialData?.medias || [],
-    sellerNumber: initialData?.sellerNumber || "+221762641751", // Numéro par défaut
-    provenance: initialData?.provenance || "", // Nouveau champ pour la provenance
+    selectedFiles: initialData?.selectedFiles || [],
+    medias: initialData?.medias || [],
+    mediasToRemove: initialData?.mediasToRemove || [],
+    sellerNumber: initialData?.sellerNumber || "+221762641751",
+    provenance: initialData?.provenance || "",
   });
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewUrls, setPreviewUrls] = useState([]);
 
-  // Gère le changement de fichiers
+  useEffect(() => {
+    if (initialData) {
+      setCar({
+        ...initialData,
+        selectedFiles: initialData.selectedFiles || [],
+        medias: initialData.medias || [],
+        mediasToRemove: initialData.mediasToRemove || [],
+      });
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    const urls = car.selectedFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => {
+      urls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [car.selectedFiles]);
+
+  // Gère le changement de fichiers (multiple ou un seul)
   const handleFiles = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3);
-    if (files.some(f => f.size > 5 * 1024 * 1024)) {
-      alert("Chaque fichier doit faire moins de 5 Mo");
+    const newFiles = Array.from(e.target.files);
+    if (!newFiles.length) return;
+    const totalFiles = (car.medias?.length || 0) + car.selectedFiles.length + newFiles.length - (car.mediasToRemove?.length || 0);
+    if (totalFiles > 6) {
+      toast.error('Vous ne pouvez ajouter au maximum que 6 fichiers.');
       return;
     }
-    setCar({ ...car, files });
+    if (newFiles.some(f => f.size > 5 * 1024 * 1024)) {
+      toast.error("Chaque fichier doit faire moins de 5 Mo");
+      return;
+    }
+    setCar({ ...car, selectedFiles: [...car.selectedFiles, ...newFiles] });
+    e.target.value = null;
+  };
+
+  // Supprime un fichier sélectionné
+  const handleRemoveFile = (index) => {
+    const updatedFiles = car.selectedFiles.filter((_, i) => i !== index);
+    setCar({ ...car, selectedFiles: updatedFiles });
+  };
+
+  // Supprime un média existant
+  const handleRemoveMedia = (url) => {
+    setCar({ ...car, mediasToRemove: [...car.mediasToRemove, url] });
+  };
+
+  // Prévisualisation plein écran
+  const handlePreview = (url, file = null) => {
+    setPreviewUrl({ url, file });
+  };
+
+  const handleClosePreview = () => {
+    setPreviewUrl(null);
   };
 
   // Gère le changement de marque
@@ -94,7 +146,7 @@ export default function CarForm({ onSubmit, initialData }) {
         e.preventDefault();
         onSubmit({ ...car, modele: getFinalModele() });
       }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-white text-black p-4 rounded shadow max-w-lg mx-auto"
+      className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-gray-800 text-white p-4 rounded-md shadow max-w-lg mx-auto border border-gray-600"
     >
       <label>
         Marque
@@ -102,7 +154,7 @@ export default function CarForm({ onSubmit, initialData }) {
           value={car.marque}
           onChange={handleMarqueChange}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir une marque</option>
           {Object.keys(MARQUES_MODELES).map(m => <option key={m} value={m}>{m}</option>)}
@@ -115,7 +167,7 @@ export default function CarForm({ onSubmit, initialData }) {
           onChange={handleModeleChange}
           required
           disabled={!car.marque}
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir un modèle</option>
           {car.marque && MARQUES_MODELES[car.marque]?.map(m => (
@@ -129,7 +181,7 @@ export default function CarForm({ onSubmit, initialData }) {
             placeholder="Saisir le modèle"
             value={car.modeleLibre}
             onChange={handleModeleLibre}
-            className="p-2 rounded bg-gray-100 text-black w-full mt-2"
+            className="p-2 rounded bg-gray-700 text-white w-full mt-2 focus:outline-none focus:ring-2 focus:ring-gold"
             required
           />
         )}
@@ -140,18 +192,18 @@ export default function CarForm({ onSubmit, initialData }) {
           type="number"
           placeholder="Année"
           value={car.annee}
-          onChange={e => setCar({ ...car, annee: e.target.value })}
+          onChange={(e) => setCar({ ...car, annee: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
       </label>
       <label>
         Carburant
         <select
           value={car.carburant}
-          onChange={e => setCar({ ...car, carburant: e.target.value })}
+          onChange={(e) => setCar({ ...car, carburant: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir</option>
           {CARBURANTS.map(c => <option key={c} value={c}>{c}</option>)}
@@ -161,9 +213,9 @@ export default function CarForm({ onSubmit, initialData }) {
         Boîte
         <select
           value={car.boite}
-          onChange={e => setCar({ ...car, boite: e.target.value })}
+          onChange={(e) => setCar({ ...car, boite: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir</option>
           {BOITES.map(b => <option key={b} value={b}>{b}</option>)}
@@ -173,9 +225,9 @@ export default function CarForm({ onSubmit, initialData }) {
         Type
         <select
           value={car.type}
-          onChange={e => setCar({ ...car, type: e.target.value, sousType: "" })}
+          onChange={(e) => setCar({ ...car, type: e.target.value, sousType: "" })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="Achat">Achat</option>
           <option value="Location">Location</option>
@@ -185,9 +237,9 @@ export default function CarForm({ onSubmit, initialData }) {
         Sous-type
         <select
           value={car.sousType}
-          onChange={e => setCar({ ...car, sousType: e.target.value })}
+          onChange={(e) => setCar({ ...car, sousType: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir</option>
           {car.type === "Achat" && <>
@@ -206,9 +258,9 @@ export default function CarForm({ onSubmit, initialData }) {
         Ville / Région
         <select
           value={car.ville}
-          onChange={e => setCar({ ...car, ville: e.target.value })}
+          onChange={(e) => setCar({ ...car, ville: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">Choisir</option>
           {VILLES.map(v => <option key={v} value={v}>{v}</option>)}
@@ -220,9 +272,9 @@ export default function CarForm({ onSubmit, initialData }) {
           type="number"
           placeholder="Prix"
           value={car.prix}
-          onChange={e => setCar({ ...car, prix: e.target.value })}
+          onChange={(e) => setCar({ ...car, prix: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
       </label>
       <label>
@@ -231,9 +283,9 @@ export default function CarForm({ onSubmit, initialData }) {
           type="tel"
           placeholder="Numéro WhatsApp (+221...)"
           value={car.sellerNumber}
-          onChange={e => setCar({ ...car, sellerNumber: e.target.value })}
+          onChange={(e) => setCar({ ...car, sellerNumber: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
       </label>
       <label>
@@ -242,32 +294,103 @@ export default function CarForm({ onSubmit, initialData }) {
           type="text"
           placeholder="Nom du parking auto"
           value={car.provenance}
-          onChange={e => setCar({ ...car, provenance: e.target.value })}
+          onChange={(e) => setCar({ ...car, provenance: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
       </label>
-      <label>
+      <label className="col-span-1 md:col-span-2">
         Description
         <textarea
           placeholder="Description"
           value={car.description}
-          onChange={e => setCar({ ...car, description: e.target.value })}
+          onChange={(e) => setCar({ ...car, description: e.target.value })}
           required
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
       </label>
-      <label>
-        Photos/Vidéos (max 3, 5Mo chacun)
+      <label className="col-span-1 md:col-span-2">
+        Photos/Vidéos (max 6, 5Mo chacun)
         <input
           type="file"
-          accept="image/*,video/*"
-          multiple
+          accept="image/*,video/mp4,video/webm,video/ogg"
           onChange={handleFiles}
-          className="p-2 rounded bg-gray-100 text-black w-full"
+          multiple
+          className="p-2 rounded bg-gray-700 text-white w-full"
+          aria-label="Ajouter des fichiers média"
         />
       </label>
-      <button className="bg-gold text-black p-2 rounded mt-2 col-span-1 md:col-span-2">{initialData ? "Modifier" : "Ajouter"}</button>
+      <div className="col-span-1 md:col-span-2">
+        <h4 className="text-white mb-2">Médias existants :</h4>
+        {car.medias?.map((url, i) => (
+          !car.mediasToRemove.includes(url) && (
+            <div key={i} className="flex items-center gap-2 mb-2">
+              {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                <img src={url} alt={`Media ${i + 1}`} className="w-20 h-20 object-cover rounded-md cursor-pointer" onClick={() => handlePreview(url)} />
+              ) : (
+                <video src={url} className="w-20 h-20 object-cover rounded-md cursor-pointer" onClick={() => handlePreview(url)} />
+              )}
+              <button
+                type="button"
+                onClick={() => handleRemoveMedia(url)}
+                className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+              >
+                Supprimer
+              </button>
+            </div>
+          )
+        ))}
+        <h4 className="text-white mb-2 mt-4">Nouveaux fichiers sélectionnés :</h4>
+        {car.selectedFiles.map((file, i) => (
+          <div key={i} className="flex items-center gap-2 mb-2">
+            {previewUrls[i] && (
+              file.type.startsWith('image/') ? (
+                <img src={previewUrls[i]} alt={`Prévisualisation ${file.name}`} className="w-20 h-20 object-cover rounded-md cursor-pointer" onClick={() => handlePreview(previewUrls[i], file)} />
+              ) : (
+                <video src={previewUrls[i]} className="w-20 h-20 object-cover rounded-md cursor-pointer" onClick={() => handlePreview(previewUrls[i], file)} />
+              )
+            )}
+            <span className="text-white">{file.name}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveFile(i)}
+              className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+            >
+              Supprimer
+            </button>
+          </div>
+        ))}
+      </div>
+      <button className="bg-gold text-black p-2 rounded-md mt-2 col-span-1 md:col-span-2 hover:bg-yellow-400 transition font-semibold">
+        {initialData ? "Modifier" : "Ajouter"}
+      </button>
+
+      {previewUrl && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50" onClick={handleClosePreview}>
+          <div className="relative" onClick={e => e.stopPropagation()}>
+            {previewUrl.file ? (
+              previewUrl.file.type.startsWith('image/') ? (
+                <img src={previewUrl.url} alt="Prévisualisation" className="max-h-[90vh] max-w-[90vw] object-contain" />
+              ) : (
+                <video src={previewUrl.url} controls className="max-h-[90vh] max-w-[90vw] object-contain" autoPlay />
+              )
+            ) : (
+              previewUrl.url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                <img src={previewUrl.url} alt="Prévisualisation" className="max-h-[90vh] max-w-[90vw] object-contain" />
+              ) : (
+                <video src={previewUrl.url} controls className="max-h-[90vh] max-w-[90vw] object-contain" autoPlay />
+              )
+            )}
+            <button
+              onClick={handleClosePreview}
+              className="absolute top-4 right-4 bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </form>
   );
 }

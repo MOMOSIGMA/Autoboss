@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from "../config/supabase";
+import { toast } from 'react-toastify';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -12,9 +13,13 @@ function CarDetail() {
   const [car, setCar] = useState(null);
   const [modalImg, setModalImg] = useState(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCar = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from('cars')
         .select('*')
@@ -23,25 +28,44 @@ function CarDetail() {
 
       if (error) {
         console.error("Erreur lors de la récupération de la voiture:", error);
-        window.addToast('Erreur lors du chargement de la voiture', 'error');
+        toast.error('Erreur lors du chargement de la voiture');
+        setLoading(false);
         return;
       }
 
-      if (data) {
+      if (data && isMounted) {
         const carData = { id: data.id, ...data };
         carData.description = carData.description || '';
         setCar(carData);
+        setLoading(false);
       }
     };
+
     fetchCar();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const handlePrevMedia = () => {
-    setCurrentMediaIndex((prev) => (prev === 0 ? car.medias.length - 1 : prev - 1));
+    setCurrentMediaIndex((prev) => {
+      const newIndex = prev === 0 ? car.medias.length - 1 : prev - 1;
+      if (modalImg) {
+        setModalImg(car.medias[newIndex]);
+      }
+      return newIndex;
+    });
   };
 
   const handleNextMedia = () => {
-    setCurrentMediaIndex((prev) => (prev === car.medias.length - 1 ? 0 : prev + 1));
+    setCurrentMediaIndex((prev) => {
+      const newIndex = prev === car.medias.length - 1 ? 0 : prev + 1;
+      if (modalImg) {
+        setModalImg(car.medias[newIndex]);
+      }
+      return newIndex;
+    });
   };
 
   const handleAddToFavorites = () => {
@@ -49,119 +73,159 @@ function CarDetail() {
     if (!favorites.includes(id)) {
       favorites.push(id);
       localStorage.setItem('favorites', JSON.stringify(favorites));
-      window.addToast('Voiture ajoutée aux favoris !', 'success');
+      toast.success('Voiture ajoutée aux favoris !');
       setTimeout(() => navigate('/favorites'), 100);
     } else {
-      window.addToast('Cette voiture est déjà dans vos favoris !', 'error');
+      toast.error('Cette voiture est déjà dans vos favoris !');
     }
   };
 
-  if (!car) {
+  if (loading || !car) {
     return (
-      <div className="container mx-auto p-4 text-white text-center bg-gray-900 min-h-screen">
-        Chargement...
+      <div className="container mx-auto p-4 sm:p-6 text-white bg-gray-900 min-h-screen">
+        <div className="mb-4 sm:mb-6">
+          <div className="h-6 w-24 bg-gray-700 rounded animate-pulse"></div>
+        </div>
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
+              <div className="relative mb-4 sm:mb-6">
+                <div className="w-full aspect-[16/9] bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-16 h-16 rounded-md bg-gray-300 dark:bg-gray-700 animate-pulse"></div>
+                  ))}
+                </div>
+              </div>
+              <div className="h-8 w-3/4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+              <div className="h-6 w-1/2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+              <div className="h-6 w-1/3 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+              <div className="h-4 w-1/4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+              <div className="h-16 w-full bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="w-full sm:w-40 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="w-full sm:w-40 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   const productUrl = window.location.href;
-  const whatsappMessage = `Bonjour, je suis intéressé par :%0A%0A- Marque : ${car.marque}%0A- Modèle : ${car.modele}%0A- Année : ${car.annee}%0A- Prix : ${formatPrice(car.prix)}%0A%0ALien du produit : ${productUrl}`;
+  const whatsappMessage = `Bonjour, je suis intéressé par :\n\n- Marque : ${car.marque}\n- Modèle : ${car.modele}\n- Année : ${car.annee}\n- Prix : ${formatPrice(car.prix)}\n\nLien du produit : ${productUrl}`;
+  const encodedWhatsappMessage = encodeURIComponent(whatsappMessage);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen">
       <button
         onClick={() => navigate(-1)}
         className="mb-4 sm:mb-6 text-gold text-lg font-semibold flex items-center hover:text-yellow-400 transition"
+        aria-label="Retour à la page précédente"
       >
         <span className="mr-2 text-xl">←</span> Retour
       </button>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
-          <div className="bg-white p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
             <div className="relative mb-4 sm:mb-6">
               {car.status === 'acheté' && (
                 <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
                   Déjà Vendu
                 </div>
               )}
-              {car.medias?.length >= 3 ? (
-                <div className="relative">
+              {car.medias?.length > 0 && (
+                <div className="relative w-full">
                   {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
                     <video
                       src={car.medias[currentMediaIndex]}
                       controls
-                      className="w-full aspect-[16/9] object-cover rounded-lg"
+                      className="car-detail-media"
+                      aria-label={`Vidéo de ${car.marque} ${car.modele}`}
                     />
                   ) : (
                     <img
                       src={car.medias[currentMediaIndex]}
                       alt={`${car.marque} ${car.modele}`}
-                      className="w-full aspect-[16/9] object-cover rounded-lg cursor-pointer"
+                      className="car-detail-media cursor-pointer"
                       onClick={() => setModalImg(car.medias[currentMediaIndex])}
                       loading="lazy"
                     />
                   )}
-                  <button
-                    onClick={handlePrevMedia}
-                    className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                    aria-label="Précédent"
-                  >
-                    <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleNextMedia}
-                    className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                    aria-label="Suivant"
-                  >
-                    <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-                    {car.medias.map((url, i) => (
-                      <div
-                        key={i}
-                        className={`w-16 h-16 rounded-md cursor-pointer border-2 ${i === currentMediaIndex ? 'border-gold' : 'border-gray-300'}`}
-                        onClick={() => setCurrentMediaIndex(i)}
+                  {car.medias.length > 1 && (
+                    <>
+                      <button
+                        onClick={handlePrevMedia}
+                        className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                        aria-label="Précédent"
                       >
-                        {url.match(/\.(mp4|webm|ogg)$/i) ? (
-                          <video src={url} className="w-full h-full object-cover rounded-md" />
-                        ) : (
-                          <img src={url} alt={`Miniature ${i + 1}`} className="w-full h-full object-cover rounded-md" loading="lazy" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                  {car.medias?.map((url, i) =>
-                    url.match(/\.(mp4|webm|ogg)$/i) ? (
-                      <video key={i} src={url} controls className="w-full sm:w-1/2 h-40 sm:h-48 object-cover rounded-lg" />
-                    ) : (
-                      <img
-                        key={i}
-                        src={url}
-                        alt={`Image ${i + 1}`}
-                        className="w-full sm:w-1/2 h-40 sm:h-48 object-cover rounded-lg cursor-pointer"
-                        onClick={() => setModalImg(url)}
-                        loading="lazy"
-                      />
-                    )
+                        <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={handleNextMedia}
+                        className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                        aria-label="Suivant"
+                      >
+                        <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
                   )}
+                  <div className="mt-4">
+                    <div className="flex flex-wrap gap-2 justify-center pb-2">
+                      {car.medias.map((url, i) => (
+                        <div
+                          key={i}
+                          className={`car-detail-thumbnail border-2 ${i === currentMediaIndex ? 'border-gold' : 'border-gray-300 dark:border-gray-600'}`}
+                          onClick={() => setCurrentMediaIndex(i)}
+                        >
+                          {url.match(/\.(mp4|webm|ogg)$/i) ? (
+                            <div className="relative w-full h-full">
+                              <video
+                                src={url}
+                                className="w-full h-full object-cover rounded-md"
+                                aria-label={`Miniature vidéo ${i + 1}`}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              </div>
+                            </div>
+                          ) : (
+                            <img
+                              src={url}
+                              alt={`Miniature ${i + 1} de ${car.marque} ${car.modele}`}
+                              className="w-full h-full object-cover rounded-md"
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gold mb-2">{car.marque} {car.modele}</h1>
-            <div className="text-base sm:text-lg text-gray-800 mb-2">{car.annee} • {car.ville} • {car.carburant} • {car.boite}</div>
+            <div className="text-base sm:text-lg text-gray-800 dark:text-gray-300 mb-2">{car.annee} • {car.ville} • {car.carburant} • {car.boite}</div>
             <div className="text-lg sm:text-xl font-bold text-gold mb-2">{formatPrice(car.prix)}</div>
-            <div className="text-sm text-gray-600 mb-2">{car.type} - {car.sousType}</div>
+            <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">{car.type} - {car.sousType}</div>
             {car.provenance && (
-              <div className="text-sm text-gray-600 mb-2">Provenance : {car.provenance}</div>
+              <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
+                Provenance : {car.provenance}
+              </div>
             )}
-            <div className="text-sm sm:text-base text-gray-700 mb-4">{car.description}</div>
+            {car.startDate && car.type === 'Location' && (
+              <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
+                Disponible à partir du : {new Date(car.startDate).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}
+              </div>
+            )}
+            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-200 mb-4">{car.description}</div>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleAddToFavorites}
@@ -170,7 +234,7 @@ function CarDetail() {
                 Ajouter aux favoris
               </button>
               <a
-                href={`https://wa.me/${car.sellerNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+                href={`https://wa.me/${car.sellerNumber}?text=${encodedWhatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto text-center bg-gold text-black px-4 py-2 sm:py-3 rounded-lg hover:bg-yellow-400 transition font-medium"
@@ -181,7 +245,12 @@ function CarDetail() {
           </div>
         </div>
         {modalImg && (
-          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setModalImg(null);
+            }}
+          >
             <button
               onClick={() => setModalImg(null)}
               className="absolute top-4 right-4 text-white text-2xl hover:text-gold transition"
@@ -189,7 +258,7 @@ function CarDetail() {
             >
               ×
             </button>
-            {car.medias?.length >= 3 && (
+            {car.medias?.length > 1 && (
               <>
                 <button
                   onClick={handlePrevMedia}

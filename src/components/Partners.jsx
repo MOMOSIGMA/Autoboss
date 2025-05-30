@@ -14,9 +14,9 @@ function Partners() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="partners-container container mx-auto p-4">
       <h2 className="text-xl font-bold text-gold mb-4">Nos Partenaires</h2>
-      <div className="grid grid-cols-6 gap-4 max-h-16 overflow-hidden">
+      <div className="grid grid-cols-6 gap-4">
         {partners.map((partner, index) => (
           <div key={partner.id} className="flex flex-col items-center">
             {partner.logo && (
