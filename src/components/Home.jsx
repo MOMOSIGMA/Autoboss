@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { supabase } from "../config/supabase";
 import Filters from './Filters';
 import { toast } from 'react-toastify';
 
@@ -8,8 +7,7 @@ const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
 };
 
-function Home() {
-  const [cars, setCars] = useState([]);
+function Home({ cars }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState(() => {
@@ -38,24 +36,10 @@ function Home() {
   const carsPerPage = 12;
 
   useEffect(() => {
-    const fetchCars = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.from('cars').select('*');
-        if (error) throw error;
-        setCars(data);
-      } catch (error) {
-        console.error("Error fetching cars:", error);
-        toast.error('Erreur lors du chargement des voitures', {
-          position: 'top-right',
-          autoClose: 3000,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCars();
-  }, []);
+    if (cars.length > 0) {
+      setLoading(false);
+    }
+  }, [cars]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -93,6 +77,8 @@ function Home() {
     return matchSearch && matchFilters;
   });
 
+  const featuredCars = filteredCars.filter(car => car.isFeatured);
+  const promotedCars = filteredCars.filter(car => car.promotion);
   const paginatedCars = filteredCars.slice(0, page * carsPerPage);
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -109,26 +95,31 @@ function Home() {
       <Link to={`/details/${car.id}`} key={car.id} className="block group">
         <div className="bg-white text-black p-2 rounded-xl border border-gold shadow hover:shadow-2xl transition relative h-full">
           <div className="relative">
-            <img 
-              src={car.medias?.[0]} 
-              alt={`${car.marque} ${car.modele}`} 
-              className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition" 
+            <img
+              src={car.medias?.[0]}
+              alt={`${car.marque} ${car.modele}`}
+              className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition"
               loading="lazy"
               decoding="async"
             />
             <div className="absolute top-2 right-2 bg-gold text-black px-2 py-1 rounded text-[0.7rem] sm:text-xs font-bold shadow">
               {formatPrice(car.prix)}
             </div>
-          </div>
-          <div className="p-1 relative">
             {car.status === 'acheté' && (
-              <div className="absolute -top-3 left-2 bg-red-600 text-white px-2 py-1 rounded text-[0.7rem] font-bold shadow z-10">
+              <div className="absolute -top-3 left-0 bg-red-600 text-white px-2 py-1 rounded text-[0.7rem] font-bold shadow z-10">
                 Déjà Vendu
               </div>
             )}
+          </div>
+          <div className="p-1 relative">
             <div className="font-bold text-base pt-2">{car.marque} {car.modele}</div>
             <div className="text-xs text-gray-500">{car.annee} • {car.ville}</div>
             <div className="text-xs text-gray-500">{car.carburant} • {car.boite}</div>
+            {car.promotion && (
+              <div className="mt-1 bg-yellow-400 text-black px-2 py-1 rounded text-[0.7rem] font-bold shadow">
+                {car.promotion.label}
+              </div>
+            )}
           </div>
         </div>
       </Link>
@@ -171,13 +162,32 @@ function Home() {
             <>
               <section className="mb-6">
                 <h2 className="text-xl font-bold text-gold mb-2">Voitures en Vedette</h2>
-                <div className="flex overflow-x-auto space-x-4 pb-2">
-                  {filteredCars.slice(0, 5).map(car => (
-                    <div key={car.id} className="min-w-[200px]">
-                      <CarCard car={car} />
-                    </div>
-                  ))}
-                </div>
+                {featuredCars.length === 0 ? (
+                  <p className="text-white">Aucune voiture en vedette pour le moment.</p>
+                ) : (
+                  <div className="flex overflow-x-auto space-x-4 pb-2">
+                    {featuredCars.slice(0, 5).map(car => (
+                      <div key={car.id} className="min-w-[200px]">
+                        <CarCard car={car} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="mb-6">
+                <h2 className="text-xl font-bold text-gold mb-2">Nos Offres de la Semaine</h2>
+                {promotedCars.length === 0 ? (
+                  <p className="text-white">Aucune offre pour le moment.</p>
+                ) : (
+                  <div className="flex overflow-x-auto space-x-4 pb-2">
+                    {promotedCars.slice(0, 6).map(car => (
+                      <div key={car.id} className="min-w-[200px]">
+                        <CarCard car={car} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
 
               <section>
@@ -190,8 +200,8 @@ function Home() {
                   )}
                 </div>
                 {page * carsPerPage < filteredCars.length && (
-                  <button 
-                    onClick={() => setPage(p => p + 1)} 
+                  <button
+                    onClick={() => setPage(p => p + 1)}
                     className="mt-4 bg-gold text-black px-4 py-2 rounded mx-auto block"
                   >
                     Voir plus

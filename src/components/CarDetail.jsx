@@ -80,6 +80,14 @@ function CarDetail() {
     }
   };
 
+  const handleContactSeller = () => {
+    const productUrl = window.location.href;
+    const whatsappMessage = `Bonjour, je suis intéressé par :\n\n- Marque : ${car.marque}\n- Modèle : ${car.modele}\n- Année : ${car.annee}\n- Prix : ${formatPrice(car.prix)}${car.promotion ? `\n- Promotion : ${car.promotion.label}` : ''}\n\nLien du produit : ${productUrl}`;
+    const encodedWhatsappMessage = encodeURIComponent(whatsappMessage);
+    const whatsappUrl = `https://wa.me/${car.sellerNumber}?text=${encodedWhatsappMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   if (loading || !car) {
     return (
       <div className="container mx-auto p-4 sm:p-6 text-white bg-gray-900 min-h-screen">
@@ -113,10 +121,6 @@ function CarDetail() {
     );
   }
 
-  const productUrl = window.location.href;
-  const whatsappMessage = `Bonjour, je suis intéressé par :\n\n- Marque : ${car.marque}\n- Modèle : ${car.modele}\n- Année : ${car.annee}\n- Prix : ${formatPrice(car.prix)}\n\nLien du produit : ${productUrl}`;
-  const encodedWhatsappMessage = encodeURIComponent(whatsappMessage);
-
   return (
     <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen">
       <button
@@ -135,20 +139,30 @@ function CarDetail() {
                   Déjà Vendu
                 </div>
               )}
+              {car.promotion && (
+                <div className="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
+                  {car.promotion.label}
+                </div>
+              )}
+              {car.isFeatured && (
+                <div className="absolute top-12 right-2 bg-green-400 text-black px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
+                  En Vedette
+                </div>
+              )}
               {car.medias?.length > 0 && (
                 <div className="relative w-full">
                   {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
                     <video
                       src={car.medias[currentMediaIndex]}
                       controls
-                      className="car-detail-media"
+                      className="car-detail-media w-full rounded-lg"
                       aria-label={`Vidéo de ${car.marque} ${car.modele}`}
                     />
                   ) : (
                     <img
                       src={car.medias[currentMediaIndex]}
                       alt={`${car.marque} ${car.modele}`}
-                      className="car-detail-media cursor-pointer"
+                      className="car-detail-media w-full rounded-lg cursor-pointer"
                       onClick={() => setModalImg(car.medias[currentMediaIndex])}
                       loading="lazy"
                     />
@@ -158,7 +172,7 @@ function CarDetail() {
                       <button
                         onClick={handlePrevMedia}
                         className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                        aria-label="Précédent"
+                        aria-label="Média précédent"
                       >
                         <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -167,7 +181,7 @@ function CarDetail() {
                       <button
                         onClick={handleNextMedia}
                         className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                        aria-label="Suivant"
+                        aria-label="Média suivant"
                       >
                         <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -222,68 +236,69 @@ function CarDetail() {
             )}
             {car.startDate && car.type === 'Location' && (
               <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
-                Disponible à partir du : {new Date(car.startDate).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}
+                Date de début : {new Date(car.startDate).toLocaleDateString()}
               </div>
             )}
-            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-200 mb-4">{car.description}</div>
+            <p className="text-gray-800 dark:text-gray-300 mb-4">{car.description || 'Aucune description disponible.'}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
+                onClick={handleContactSeller}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
+                aria-label="Contacter le vendeur via WhatsApp"
+              >
+                Contacter le vendeur
+              </button>
+              <button
                 onClick={handleAddToFavorites}
-                className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                className="bg-gold text-black px-4 py-2 rounded-lg hover:bg-yellow-400 transition font-semibold"
+                aria-label="Ajouter aux favoris"
               >
                 Ajouter aux favoris
               </button>
-              <a
-                href={`https://wa.me/${car.sellerNumber}?text=${encodedWhatsappMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto text-center bg-gold text-black px-4 py-2 sm:py-3 rounded-lg hover:bg-yellow-400 transition font-medium"
-              >
-                Contacter via WhatsApp
-              </a>
             </div>
           </div>
         </div>
-        {modalImg && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setModalImg(null);
-            }}
-          >
+      </div>
+
+      {modalImg && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+          onClick={() => setModalImg(null)}
+        >
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={modalImg}
+              alt="Agrandissement"
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
             <button
               onClick={() => setModalImg(null)}
-              className="absolute top-4 right-4 text-white text-2xl hover:text-gold transition"
-              aria-label="Fermer la modale"
+              className="absolute top-4 right-4 bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700"
+              aria-label="Fermer l'image agrandie"
             >
-              ×
+              Fermer
             </button>
-            {car.medias?.length > 1 && (
-              <>
-                <button
-                  onClick={handlePrevMedia}
-                  className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                  aria-label="Précédent"
-                >
-                  <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleNextMedia}
-                  className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-                  aria-label="Suivant"
-                >
-                  <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </>
-            )}
-            <img src={modalImg} alt="Image agrandie" className="max-w-full max-h-[90vh] object-contain" />
+            <button
+              onClick={handlePrevMedia}
+              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+              aria-label="Image précédente"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={handleNextMedia}
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+              aria-label="Image suivante"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

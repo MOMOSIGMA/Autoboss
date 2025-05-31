@@ -3,12 +3,10 @@ import { supabase } from "../config/supabase";
 import { toast } from 'react-toastify';
 import CarForm from './CarForm';
 
-// Utilitaire pour formater le prix
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
 };
 
-// Composant pour la connexion
 const AdminLogin = ({ onLogin, login, setLogin }) => {
   return (
     <div className="container mx-auto p-4 pt-4 bg-gray-900 min-h-screen">
@@ -40,7 +38,6 @@ const AdminLogin = ({ onLogin, login, setLogin }) => {
   );
 };
 
-// Composant pour la gestion des voitures
 const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars, handleAddCar, handleUpdateCar, handleDeleteCar, handleMarkAsSold }) => {
   const handleEditCar = (car) => {
     setEditingCar({ ...car, selectedFiles: [], mediasToRemove: [] });
@@ -89,6 +86,8 @@ const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars
                 <div className="text-gold font-semibold">{formatPrice(car.prix)}</div>
                 <div className="text-gray-400">{car.carburant} - {car.boite}</div>
                 {car.provenance && <div className="text-gray-400">Provenance : {car.provenance}</div>}
+                {car.isFeatured && <div className="text-green-400">En vedette</div>}
+                {car.promotion && <div className="text-yellow-400">Promotion : {car.promotion.label}</div>}
                 <div className="text-gray-300">{car.description}</div>
                 <div className="text-sm text-gray-400">Statut : {car.status || 'disponible'}</div>
                 <div className="text-sm text-gray-400">Numéro du Vendeur : {car.sellerNumber}</div>
@@ -133,7 +132,6 @@ const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars
   );
 };
 
-// Composant pour la gestion des partenaires
 const PartnerManagement = ({ partners, loadingPartners, newPartner, setNewPartner, fetchPartners, handleAddPartner, handleDeletePartner, isAdmin }) => {
   return (
     <>
@@ -194,7 +192,6 @@ const PartnerManagement = ({ partners, loadingPartners, newPartner, setNewPartne
   );
 };
 
-// Composant principal Admin
 function Admin() {
   const [user, setUser] = useState(null);
   const [login, setLogin] = useState({ email: '', password: '' });
@@ -205,8 +202,8 @@ function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingCars, setLoadingCars] = useState(true);
   const [loadingPartners, setLoadingPartners] = useState(true);
-  const [uploadProgress, setUploadProgress] = useState(0); // Progression de l'upload
-  const [isUploading, setIsUploading] = useState(false); // État de l'upload
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -371,89 +368,91 @@ function Admin() {
   };
 
   const handleUpdateCar = async (car) => {
-  if (!car.medias?.length && !car.selectedFiles?.length) {
-    toast.error('Veuillez conserver ou ajouter au moins une image ou vidéo.');
-    return;
-  }
-  if ((car.medias?.length || 0) + (car.selectedFiles?.length || 0) - (car.mediasToRemove?.length || 0) > 6) {
-    toast.error('Vous ne pouvez avoir au maximum que 6 fichiers.');
-    return;
-  }
-  setIsUploading(true);
-  setUploadProgress(0);
-  const existingMedias = car.medias.filter(url => !car.mediasToRemove.includes(url));
-  const newUrls = [];
-  const totalFiles = car.selectedFiles?.length || 0;
-  let completedFiles = 0;
+    if (!car.medias?.length && !car.selectedFiles?.length) {
+      toast.error('Veuillez conserver ou ajouter au moins une image ou vidéo.');
+      return;
+    }
+    if ((car.medias?.length || 0) + (car.selectedFiles?.length || 0) - (car.mediasToRemove?.length || 0) > 6) {
+      toast.error('Vous ne pouvez avoir au maximum que 6 fichiers.');
+      return;
+    }
+    setIsUploading(true);
+    setUploadProgress(0);
+    const existingMedias = car.medias.filter(url => !car.mediasToRemove.includes(url));
+    const newUrls = [];
+    const totalFiles = car.selectedFiles?.length || 0;
+    let completedFiles = 0;
 
-  if (totalFiles > 0) {
-    for (const file of car.selectedFiles) {
-      if (typeof file === 'string') {
-        newUrls.push(file);
-        completedFiles++;
-        setUploadProgress((completedFiles / totalFiles) * 80);
-        continue;
-      }
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-      try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.secure_url) {
-          newUrls.push(data.secure_url);
-        } else {
-          toast.error(`Erreur Cloudinary : ${data.error?.message || 'Upload échoué'}`);
+    if (totalFiles > 0) {
+      for (const file of car.selectedFiles) {
+        if (typeof file === 'string') {
+          newUrls.push(file);
+          completedFiles++;
+          setUploadProgress((completedFiles / totalFiles) * 80);
+          continue;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        try {
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.secure_url) {
+            newUrls.push(data.secure_url);
+          } else {
+            toast.error(`Erreur Cloudinary : ${data.error?.message || 'Upload échoué'}`);
+            setIsUploading(false);
+            setUploadProgress(0);
+            return;
+          }
+          completedFiles++;
+          setUploadProgress((completedFiles / totalFiles) * 80);
+        } catch (error) {
+          toast.error('Erreur lors de l\'upload de l\'image');
           setIsUploading(false);
           setUploadProgress(0);
           return;
         }
-        completedFiles++;
-        setUploadProgress((completedFiles / totalFiles) * 80);
-      } catch (error) {
-        toast.error('Erreur lors de l\'upload de l\'image');
-        setIsUploading(false);
-        setUploadProgress(0);
-        return;
       }
     }
-  }
 
-  const updatedMedias = [...existingMedias, ...newUrls];
-  const carData = {
-    marque: car.marque,
-    modele: car.modele,
-    annee: car.annee,
-    carburant: car.carburant,
-    boite: car.boite,
-    type: car.type,
-    sousType: car.sousType,
-    ville: car.ville,
-    prix: car.prix,
-    description: car.description,
-    sellerNumber: car.sellerNumber,
-    provenance: car.provenance,
-    medias: updatedMedias,
+    const updatedMedias = [...existingMedias, ...newUrls];
+    const carData = {
+      marque: car.marque,
+      modele: car.modele,
+      annee: car.annee,
+      carburant: car.carburant,
+      boite: car.boite,
+      type: car.type,
+      sousType: car.sousType,
+      ville: car.ville,
+      prix: car.prix,
+      description: car.description,
+      sellerNumber: car.sellerNumber,
+      provenance: car.provenance,
+      medias: updatedMedias,
+      isFeatured: car.isFeatured,
+      promotion: car.promotion,
+    };
+
+    const { error } = await supabase
+      .from('cars')
+      .update(carData)
+      .eq('id', car.id);
+    if (error) {
+      toast.error(`Erreur : ${error.message}`);
+    } else {
+      setUploadProgress(100);
+      setEditingCar(null);
+      fetchCars();
+      toast.success('Voiture modifiée avec succès !');
+    }
+    setIsUploading(false);
+    setUploadProgress(0);
   };
-
-  const { error } = await supabase
-    .from('cars')
-    .update(carData)
-    .eq('id', car.id);
-  if (error) {
-    toast.error(`Erreur : ${error.message}`);
-  } else {
-    setUploadProgress(100);
-    setEditingCar(null);
-    fetchCars();
-    toast.success('Voiture modifiée avec succès !');
-  }
-  setIsUploading(false);
-  setUploadProgress(0);
-};
 
   const handleAddPartner = async (e) => {
     e.preventDefault();

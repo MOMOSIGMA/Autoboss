@@ -40,6 +40,10 @@ const VILLES = [
 
 const BOITES = ["Manuelle", "Automatique"];
 const CARBURANTS = ["Essence", "Diesel", "Électrique", "Hybride", "GPL"];
+const PROMOTION_TYPES = [
+  { value: "percentage", label: "Réduction en pourcentage" },
+  { value: "special", label: "Offre spéciale" },
+];
 
 export default function CarForm({ onSubmit, initialData, setEditingCar }) {
   const [car, setCar] = useState({
@@ -59,9 +63,14 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
     mediasToRemove: initialData?.mediasToRemove || [],
     sellerNumber: initialData?.sellerNumber || "+221762641751",
     provenance: initialData?.provenance || "",
+    isFeatured: initialData?.isFeatured || false,
+    promotion: initialData?.promotion || null,
   });
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [promotionType, setPromotionType] = useState(car.promotion?.type || "");
+  const [promotionValue, setPromotionValue] = useState(car.promotion?.value || "");
+  const [promotionLabel, setPromotionLabel] = useState(car.promotion?.label || "");
 
   useEffect(() => {
     if (initialData) {
@@ -70,7 +79,14 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
         selectedFiles: initialData.selectedFiles || [],
         medias: initialData.medias || [],
         mediasToRemove: initialData.mediasToRemove || [],
+        isFeatured: initialData.isFeatured || false,
+        promotion: initialData.promotion || null,
       });
+      if (initialData.promotion) {
+        setPromotionType(initialData.promotion.type || "");
+        setPromotionValue(initialData.promotion.value || "");
+        setPromotionLabel(initialData.promotion.label || "");
+      }
     }
   }, [initialData]);
 
@@ -82,7 +98,6 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
     };
   }, [car.selectedFiles]);
 
-  // Gère le changement de fichiers (multiple ou un seul)
   const handleFiles = (e) => {
     const newFiles = Array.from(e.target.files);
     if (!newFiles.length) return;
@@ -99,18 +114,15 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
     e.target.value = null;
   };
 
-  // Supprime un fichier sélectionné
   const handleRemoveFile = (index) => {
     const updatedFiles = car.selectedFiles.filter((_, i) => i !== index);
     setCar({ ...car, selectedFiles: updatedFiles });
   };
 
-  // Supprime un média existant
   const handleRemoveMedia = (url) => {
     setCar({ ...car, mediasToRemove: [...car.mediasToRemove, url] });
   };
 
-  // Prévisualisation plein écran
   const handlePreview = (url, file = null) => {
     setPreviewUrl({ url, file });
   };
@@ -119,22 +131,31 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
     setPreviewUrl(null);
   };
 
-  // Gère le changement de marque
   const handleMarqueChange = (e) => {
     setCar({ ...car, marque: e.target.value, modele: "", modeleLibre: "" });
   };
 
-  // Gère le changement de modèle
   const handleModeleChange = (e) => {
     setCar({ ...car, modele: e.target.value, modeleLibre: "" });
   };
 
-  // Gère le champ "autre modèle"
   const handleModeleLibre = (e) => {
     setCar({ ...car, modeleLibre: e.target.value });
   };
 
-  // Récupère la valeur finale du modèle
+  const handlePromotionChange = () => {
+    if (promotionType && promotionLabel) {
+      const promotion = {
+        type: promotionType,
+        label: promotionLabel,
+        value: promotionType === "percentage" ? parseInt(promotionValue) || 0 : null,
+      };
+      setCar({ ...car, promotion });
+    } else {
+      setCar({ ...car, promotion: null });
+    }
+  };
+
   const getFinalModele = () => {
     if (car.modele === "__autre__") return car.modeleLibre;
     return car.modele;
@@ -308,6 +329,54 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
           required
           className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
         />
+      </label>
+      <label className="col-span-1 md:col-span-2">
+        Mettre en vedette
+        <input
+          type="checkbox"
+          checked={car.isFeatured}
+          onChange={(e) => setCar({ ...car, isFeatured: e.target.checked })}
+          className="ml-2"
+        />
+      </label>
+      <label className="col-span-1 md:col-span-2">
+        Promotion
+        <select
+          value={promotionType}
+          onChange={(e) => {
+            setPromotionType(e.target.value);
+            handlePromotionChange();
+          }}
+          className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-gold"
+        >
+          <option value="">Aucune promotion</option>
+          {PROMOTION_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        {promotionType === "percentage" && (
+          <input
+            type="number"
+            placeholder="Pourcentage de réduction"
+            value={promotionValue}
+            onChange={(e) => {
+              setPromotionValue(e.target.value);
+              handlePromotionChange();
+            }}
+            className="p-2 rounded bg-gray-700 text-white w-full mt-2 focus:outline-none focus:ring-2 focus:ring-gold"
+          />
+        )}
+        {promotionType && (
+          <input
+            type="text"
+            placeholder="Label de la promotion (ex: -20%, Offre du Jour)"
+            value={promotionLabel}
+            onChange={(e) => {
+              setPromotionLabel(e.target.value);
+              handlePromotionChange();
+            }}
+            className="p-2 rounded bg-gray-700 text-white w-full mt-2 focus:outline-none focus:ring-2 focus:ring-gold"
+            required
+          />
+        )}
       </label>
       <label className="col-span-1 md:col-span-2">
         Photos/Vidéos (max 6, 5Mo chacun)
