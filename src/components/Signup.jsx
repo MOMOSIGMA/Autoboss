@@ -1,3 +1,4 @@
+// src/components/Signup.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
@@ -6,22 +7,36 @@ import { toast } from 'react-toastify';
 function Signup({ setUser }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signUp({
+    if (!fullName.trim()) {
+      toast.error('Veuillez entrer votre nom complet');
+      return;
+    }
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
     if (error) {
       toast.error(error.message);
     } else {
-      // Vérifier la session après l'inscription
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      toast.success('Inscription réussie ! Redirection...');
-      setTimeout(() => navigate('/'), 2000); // Redirige après 2 secondes
+      // Insérer le profil avec full_name
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.user.id,
+        username: `User_${data.user.id.slice(0, 8)}`,
+        full_name: fullName,
+      });
+      if (profileError) {
+        toast.error('Erreur lors de la création du profil: ' + profileError.message);
+      } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+        toast.success('Inscription réussie ! Redirection...');
+        setTimeout(() => navigate('/'), 2000);
+      }
     }
   };
 
@@ -29,6 +44,16 @@ function Signup({ setUser }) {
     <div className="container mx-auto p-4 pt-4 text-white">
       <h2 className="text-xl font-bold text-gold mb-4">Inscription</h2>
       <form onSubmit={handleSignup} className="max-w-md">
+        <div className="mb-4">
+          <label className="block mb-1">Nom complet</label>
+          <input
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="p-2 rounded bg-gray-700 text-white w-full"
+            required
+          />
+        </div>
         <div className="mb-4">
           <label className="block mb-1">Email</label>
           <input

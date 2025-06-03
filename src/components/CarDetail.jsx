@@ -1,3 +1,4 @@
+// src/components/CarDetail.jsx
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../config/supabase';
@@ -10,13 +11,6 @@ import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
-};
-
-const maskEmail = (email) => {
-  if (!email) return 'Utilisateur Anonyme';
-  const [name, domain] = email.split('@');
-  const maskedName = name.length > 3 ? name.substring(0, 3) + '****' : name + '****';
-  return `${maskedName}@${domain}`;
 };
 
 const transformCloudinaryUrl = (url) => {
@@ -45,8 +39,8 @@ function CarDetail({ user }) {
   const fetchReviews = async () => {
     setReviewsError(null);
     const { count, error: countError } = await supabase
-      .from('reviews')
-      .select('*', { count: 'exact', head: true })
+      .from('reviews_with_user')
+      .select('id', { count: 'exact', head: true })
       .eq('car_id', id);
 
     if (countError) {
@@ -58,7 +52,7 @@ function CarDetail({ user }) {
 
     const { data, error } = await supabase
       .from('reviews_with_user')
-      .select('*')
+      .select('id, car_id, rating, comment, created_at, full_name')
       .eq('car_id', id)
       .order('created_at', { ascending: false })
       .range((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage - 1);
@@ -67,23 +61,8 @@ function CarDetail({ user }) {
       console.error('Erreur lors de la récupération des avis:', error.message);
       setReviewsError(error.message);
       toast.error('Erreur lors du chargement des avis');
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('car_id', id)
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage - 1);
-
-      if (fallbackError) {
-        console.error('Erreur lors de la récupération des avis (fallback):', fallbackError.message);
-        setReviews([]);
-      } else {
-        setReviews(fallbackData || []);
-        const avg = fallbackData.length > 0
-          ? fallbackData.reduce((sum, r) => sum + r.rating, 0) / fallbackData.length
-          : 0;
-        setAverageRating(avg);
-      }
+      setReviews([]);
+      setAverageRating(0);
     } else {
       if (process.env.NODE_ENV !== 'production') {
         console.log('Avis récupérés:', data);
@@ -474,13 +453,11 @@ function CarDetail({ user }) {
                       onChange={handleReviewChange}
                       className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       rows="4"
-                      required
-                      placeholder="Partagez votre avis..."
                     />
                   </div>
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-full hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 Tropic text-warning text-black px-6 py-2 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
                   >
                     Soumettre l'avis
                   </button>
@@ -498,7 +475,7 @@ function CarDetail({ user }) {
                   <p>Erreur lors du chargement des avis : {reviewsError}</p>
                   <button
                     onClick={handleRetryFetchReviews}
-                    className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 transition-all duration-200"
+                    className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 transition-colors"
                   >
                     Réessayer
                   </button>
@@ -521,7 +498,7 @@ function CarDetail({ user }) {
                         </div>
                         <p className="text-gray-300">{review.comment}</p>
                         <p className="text-sm text-gray-400">
-                          Par : {review.user_email ? maskEmail(review.user_email) : 'Utilisateur Anonyme'}
+                          Par : {review.full_name || 'Utilisateur Anonyme'}
                         </p>
                       </div>
                     ))}
@@ -583,27 +560,27 @@ function CarDetail({ user }) {
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); handlePrevMedia(); }}
-                  className="absolute left-4 text-white text-3xl bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 transition"
+                  className="absolute left-4 text-white text-3xl bg-gray-600 rounded-full p-2 hover:bg-gray-800 transition"
                   aria-label="Média précédent"
                 >
                   ←
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleNextMedia(); }}
-                  className="absolute right-4 text-white text-3xl bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 transition"
-                  aria-label="Média suivant"
+                  className="absolute right-4 text-white bg-gray-600 rounded p-2 hover:bg-gray-800 transition"
+                  aria-label="Next media page"
                 >
                   →
-                </button>
+                  </button>
               </>
             )}
             <button
-              onClick={(e) => { e.stopPropagation(); setFullScreenOpen(false); }}
-              className="absolute top-4 right-4 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700 transition-all duration-200 transform hover:scale-110 flex items-center gap-2"
-              aria-label="Fermer l'image en plein écran"
+              onClick={() => setFullScreenOpen(false)}
+              className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-3 hover:bg-blue-800 transition-all duration-300 flex items-center gap-2"
+              aria-label="Close Fullscreen image"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               <span className="text-sm">Retour</span>
             </button>
@@ -616,7 +593,7 @@ function CarDetail({ user }) {
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 animate-fade-in"
           onClick={() => setModalOpen(false)}
         >
-          <div className="relative backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-gray-500/30 shadow-2xl w-[80%] max-w-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+          <div className="relative backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-gray-500/30 shadow-2xl w-[80%] max-w-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center justify-center">
                 {car.medias?.length > 0 && (

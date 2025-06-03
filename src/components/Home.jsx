@@ -1,3 +1,4 @@
+// src/components/Home.jsx
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Filters from './Filters';
@@ -42,12 +43,21 @@ function Home({ cars }) {
 
   const params = new URLSearchParams(location.search);
   const search = params.get('q') || '';
-  const carsPerPage = 12;
+  const carsPerPage = 8; // Aligned with Achat/Location (2 cols on mobile)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const heroImages = [
-    'https://images.pexels.com/photos/18886584/pexels-photo-18886584/free-photo-of-la-vue-arriere-de-la-kia-ev5-garee-a-l-exterieur-par-une-journee-ensoleillee.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    'https://images.pexels.com/photos/919073/pexels-photo-919073.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-    'https://images.pexels.com/photos/8664336/pexels-photo-8664336.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    {
+      url: 'https://images.pexels.com/photos/18886584/pexels-photo-18886584/free-photo-of-la-vue-arriere-de-la-kia-ev5-garee-a-l-exterieur-par-une-journee-ensoleillee.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      alt: 'Kia EV5 en extérieur'
+    },
+    {
+      url: 'https://images.pexels.com/photos/919073/pexels-photo-919073.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+      alt: 'Voiture rouge en mouvement'
+    },
+    {
+      url: 'https://images.pexels.com/photos/8664336/pexels-photo-8664336.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      alt: 'Voiture blanche sur route'
+    },
   ];
 
   useEffect(() => {
@@ -58,7 +68,7 @@ function Home({ cars }) {
     }
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
+    }, 8000); // 8 seconds for smoother transitions
     return () => clearInterval(interval);
   }, [cars]);
 
@@ -93,21 +103,24 @@ function Home({ cars }) {
         setViewedCars(updatedViewed);
         localStorage.setItem('viewedCars', JSON.stringify(updatedViewed));
       }
-    }, [car.id, viewedCars]);
+    }, [car.id]);
 
     return (
-      <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} className="block group">
+      <Link
+        to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
+        className="block group"
+      >
         <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full min-h-[20rem]">
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-48 overflow-hidden rounded-lg">
             <img
-              src={transformCloudinaryUrl(car.medias?.[0])}
+              src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
               alt={`${car.marque} ${car.modele}`}
-              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
               decoding="async"
             />
             <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-3 py-1 rounded-full text-sm font-bold shadow-md">
-              {formatPrice(car.prix)}
+              {formatPrice(car.prix || 0)}
             </div>
             <div className="absolute bottom-2 right-2 flex flex-col gap-1">
               {car.status === 'acheté' && (
@@ -153,17 +166,25 @@ function Home({ cars }) {
         <meta property="og:description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
         <meta property="og:image" content="/logo.png" />
         <meta property="og:url" content={window.location.href} />
+        {heroImages.map((image, index) => (
+          <link key={index} rel="preload" href={image.url} as="image" />
+        ))}
       </Helmet>
 
       <section className="relative h-[60vh] mb-12 bg-gray-900 rounded-2xl overflow-hidden">
         <div className="absolute inset-0">
-          {heroImages.map((img, index) => (
+          {heroImages.map((image, index) => (
             <div
               key={index}
-              className={`absolute inset-0 bg-[url(${img})] bg-cover bg-center transition-opacity duration-1000 ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
-              style={{ backgroundImage: `url(${img})` }}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
+              style={{ backgroundImage: `url(${image.url})` }}
             >
-              <img src={img} alt={`Voiture ${index + 1}`} className="w-full h-full object-cover opacity-0" loading="lazy" />
+              <img
+                src={image.url}
+                alt={image.alt}
+                className="w-full h-full object-cover opacity-0"
+                loading="lazy"
+              />
             </div>
           ))}
           <div className="absolute inset-0 bg-black opacity-50"></div>
@@ -214,7 +235,7 @@ function Home({ cars }) {
 
           <section className="animate-fade-in-up delay-400">
             <h2 className="text-3xl font-bold text-yellow-400 mb-4">Toutes les Voitures</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {paginatedCars.length > 0 ? (
                 paginatedCars.map(car => <CarCard key={car.id} car={car} />)
               ) : (
@@ -241,7 +262,7 @@ function Home({ cars }) {
           aria-label="Retour en haut de la page"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
           </svg>
         </button>
       )}

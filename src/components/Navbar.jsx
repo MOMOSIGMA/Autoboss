@@ -1,11 +1,10 @@
+// src/components/Navbar.jsx
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTiktok } from 'react-icons/fa';
-import SearchManager from './SearchManager'; // Nouveau fichier
 
-const Navbar = ({ currentPage, handleNavClick, user, handleSignOut }) => {
+const Navbar = ({ currentPage, handleNavClick, user, handleSignOut, setIsOpenMenu }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
   const menuRef = useRef(null);
 
   const handleMenuItemClick = () => {
@@ -65,7 +64,6 @@ const Navbar = ({ currentPage, handleNavClick, user, handleSignOut }) => {
             />
           </Link>
         </div>
-        <SearchManager navigate={navigate} handleNavClick={handleNavClick} setIsOpen={setIsOpen} />
         <div className="flex items-center space-x-4">
           <div className="hidden md:flex space-x-4 items-center">
             {navLinks.map(({ to, label }) => (

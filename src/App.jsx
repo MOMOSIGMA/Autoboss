@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from './config/supabase';
@@ -16,6 +17,7 @@ import Login from './components/Login';
 import Blog from './components/Blog';
 import BlogPost from './components/BlogPost';
 import SearchResults from './components/SearchResults';
+import SearchBar from './components/SearchBar';
 import { ToastContainer } from 'react-toastify';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import 'react-toastify/dist/ReactToastify.css';
@@ -119,6 +121,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -233,8 +236,9 @@ function App() {
           <meta property="og:url" content={window.location.href} />
           <meta property="og:image" content="/logo.png" />
         </Helmet>
+        <SearchBar setIsOpenMenu={setIsMenuOpen} />
         <Routes>
-          <Route element={<Layout cars={cars} user={user} handleSignOut={handleSignOut} />}>
+          <Route element={<Layout cars={cars} user={user} handleSignOut={handleSignOut} setIsOpenMenu={setIsMenuOpen} />}>
             <Route path="/" element={<><Home cars={cars} /><Partners /></>} />
             <Route path="/search" element={<SearchResults cars={cars} />} />
             <Route path="/voiture/:slug/:id" element={<><CarDetail user={user} /><Partners /></>} />
