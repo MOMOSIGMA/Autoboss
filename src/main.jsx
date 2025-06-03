@@ -5,7 +5,7 @@ import './index.css';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, onMessage } from 'firebase/messaging';
 
-// Charge les variables d’environnement
+// Charger les variables d’environnement
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
