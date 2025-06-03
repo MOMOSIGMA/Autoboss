@@ -5,7 +5,10 @@ import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
-  plugins: [
+  server: {
+  host: true,
+},
+ plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -87,6 +90,8 @@ export default defineConfig({
         enabled: true,
         type: 'module',
       },
+      injectRegister: 'auto',
+      includeAssets: ['firebase-messaging-sw.js'],
     }),
   ],
   build: {

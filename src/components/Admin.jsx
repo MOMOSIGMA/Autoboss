@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "../config/supabase";
 import { toast } from 'react-toastify';
 import CarForm from './CarForm';
+import { useNavigate, Link } from 'react-router-dom';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -204,48 +205,84 @@ function Admin() {
   const [loadingPartners, setLoadingPartners] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingRole, setIsLoadingRole] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
+
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session && isMounted) {
         setUser(session.user);
-        const { data: userData } = await supabase
+        const { data: userData, error } = await supabase
           .from('users')
           .select('role')
           .eq('id', session.user.id)
-          .single();
-        setIsAdmin(userData?.role === 'admin');
-        if (userData?.role === 'admin') {
-          await fetchCars();
-          await fetchPartners();
+          .maybeSingle();
+        if (error) {
+          console.error('Erreur lors de la vérification du rôle:', error.message);
+          if (isMounted) {
+            toast.error('Erreur lors de la vérification des permissions. Contactez un administrateur.');
+            navigate('/');
+          }
+        } else if (userData && userData.role === 'admin') {
+          if (isMounted) {
+            setIsAdmin(true);
+            await fetchCars();
+            await fetchPartners();
+          }
+        } else {
+          // Si pas de données ou rôle non 'admin', l'utilisateur n'est pas admin
+          if (isMounted) {
+            setIsAdmin(false);
+            // Pas de redirection ici, géré par le rendu conditionnel
+          }
         }
       }
+      if (isMounted) setIsLoadingRole(false);
     };
+
     checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      if (session) {
-        supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            setIsAdmin(data?.role === 'admin');
-            if (data?.role === 'admin') {
-              fetchCars();
-              fetchPartners();
-            }
-          });
+      if (isMounted) {
+        setUser(session?.user || null);
+        if (session) {
+          supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle()
+            .then(({ data, error }) => {
+              if (isMounted) {
+                if (error) {
+                  console.error('Erreur lors de la vérification du rôle:', error.message);
+                  toast.error('Erreur lors de la vérification des permissions. Contactez un administrateur.');
+                  navigate('/');
+                } else if (data && data.role === 'admin') {
+                  setIsAdmin(true);
+                  fetchCars();
+                  fetchPartners();
+                } else {
+                  setIsAdmin(false);
+                }
+              }
+            });
+        } else {
+          if (isMounted) {
+            setIsAdmin(false);
+            navigate('/');
+          }
+        }
       }
     });
 
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const fetchCars = async () => {
     setLoadingCars(true);
@@ -521,6 +558,26 @@ function Admin() {
 
   if (!user) {
     return <AdminLogin onLogin={handleLogin} login={login} setLogin={setLogin} />;
+  }
+
+  if (isLoadingRole) {
+    return (
+      <div className="container mx-auto p-4 pt-4 bg-gray-900 min-h-screen text-white text-center">
+        Chargement des permissions...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto p-4 pt-4 bg-gray-900 min-h-screen text-white text-center">
+        <h2 className="text-2xl font-bold text-gold mb-6">Accès Refusé</h2>
+        <p className="mb-4">Vous n'avez pas les autorisations nécessaires pour accéder à cette page. Seuls les administrateurs sont autorisés.</p>
+        <Link to="/" className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-400 transition font-semibold">
+          Retourner à l'accueil
+        </Link>
+      </div>
+    );
   }
 
   return (

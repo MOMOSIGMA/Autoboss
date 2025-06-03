@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Filters from './Filters';
 import { toast } from 'react-toastify';
+import { Helmet } from 'react-helmet-async';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -92,7 +93,7 @@ function Home({ cars }) {
     }, [car.id, viewedCars]);
 
     return (
-      <Link to={`/details/${car.id}`} key={car.id} className="block group">
+      <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} key={car.id} className="block group">
         <div className="bg-white text-black p-2 rounded-xl border border-gold shadow hover:shadow-2xl transition relative h-full">
           <div className="relative">
             <img
@@ -139,6 +140,15 @@ function Home({ cars }) {
 
   return (
     <div className="container mx-auto p-4 pt-4 relative">
+      <Helmet>
+        <title>Autoboss - Voitures à Vendre et à Louer au Sénégal</title>
+        <meta name="description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
+        <meta name="keywords" content="voitures Sénégal, vendre voiture Dakar, louer voiture, Autoboss, voitures d'occasion" />
+        <meta property="og:title" content="Autoboss - Voitures à Vendre et à Louer au Sénégal" />
+        <meta property="og:description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
+        <meta property="og:image" content="/logo.png" />
+        <meta property="og:url" content={window.location.href} />
+      </Helmet>
       <Filters filters={filters} setFilters={setFilters} title="Trier & Filtrer" />
 
       {loading ? (

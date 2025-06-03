@@ -1,17 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import Root from './Root';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>
 );
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ Service Worker enregistré', reg))
-      .catch(err => console.log('❌ Erreur Service Worker', err));
-  });
-}
