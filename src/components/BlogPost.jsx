@@ -1,38 +1,7 @@
+// src/components/BlogPost.jsx
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-
-const blogPosts = {
-  'conseils-pour-acheter-une-voiture-doccasion': {
-    title: 'Conseils pour Acheter une Voiture d’Occasion au Sénégal',
-    content: `
-      <p>Acheter une voiture d’occasion peut être une excellente option pour économiser de l’argent, mais cela comporte aussi des risques. Voici quelques conseils pour faire un achat malin :</p>
-      <ul class="list-disc pl-6 mb-4">
-        <li><strong>Vérifiez l’historique du véhicule :</strong> Demandez les documents du véhicule pour vérifier son passé (accidents, réparations, etc.).</li>
-        <li><strong>Faites inspecter la voiture :</strong> Faites appel à un mécanicien de confiance pour inspecter le moteur, la carrosserie et les pneus.</li>
-        <li><strong>Négociez le prix :</strong> Comparez les prix sur des plateformes comme Autoboss pour obtenir une bonne affaire.</li>
-        <li><strong>Testez la voiture :</strong> Faites un essai routier pour vous assurer que tout fonctionne correctement.</li>
-      </ul>
-      <p>Avec ces conseils, vous serez mieux préparé pour acheter une voiture d’occasion au Sénégal.</p>
-    `,
-    image: '/blog1.jpg',
-    date: '2025-06-01',
-  },
-  'comment-louer-une-voiture-au-senegal': {
-    title: 'Comment Louer une Voiture au Sénégal : Guide Complet',
-    content: `
-      <p>La location de voiture est une solution pratique pour les voyageurs ou les personnes ayant besoin d’un véhicule temporaire. Voici un guide pour louer une voiture au Sénégal :</p>
-      <ul class="list-disc pl-6 mb-4">
-        <li><strong>Choisissez une plateforme fiable :</strong> Utilisez des sites comme Autoboss pour trouver des voitures disponibles à Dakar ou ailleurs.</li>
-        <li><strong>Vérifiez les conditions :</strong> Assurez-vous de comprendre les termes de location (durée, assurance, dépôt).</li>
-        <li><strong>Contactez le loueur :</strong> Communiquez directement avec le loueur via WhatsApp pour confirmer la disponibilité.</li>
-        <li><strong>Inspectez la voiture :</strong> Avant de prendre la voiture, vérifiez son état pour éviter des frais supplémentaires.</li>
-      </ul>
-      <p>En suivant ces étapes, vous pourrez louer une voiture facilement et en toute sécurité au Sénégal.</p>
-    `,
-    image: '/blog2.jpg',
-    date: '2025-06-02',
-  },
-};
+import blogPosts from '../data/blogPosts';
 
 function BlogPost() {
   const { slug } = useParams();

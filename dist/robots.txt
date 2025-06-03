@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://autoboss.sn/sitemap.xml
