@@ -1,0 +1,1 @@
+self.firebaseConfig = {"apiKey":"AIzaSyD-quBr-ka6upQ-PnDejgrkceU2SDtZzyQ","authDomain":"autoboss-16.firebaseapp.com","projectId":"autoboss-16","storageBucket":"autoboss-16.firebasestorage.app","messagingSenderId":"988895905341","appId":"1:988895905341:web:ac798c0b678857516fcc54","measurementId":"G-NVBM34V613"};
