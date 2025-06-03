@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Filters from './Filters';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
@@ -8,13 +8,20 @@ const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
 };
 
+const transformCloudinaryUrl = (url) => {
+  if (url && url.includes('res.cloudinary.com')) {
+    return url.replace('/upload/', '/upload/w_800,q_auto,f_auto/');
+  }
+  return url;
+};
+
 function Home({ cars }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState(() => {
     const savedFilters = localStorage.getItem('filters');
     return savedFilters ? JSON.parse(savedFilters) : {
-      type: 'Achat',
+      type: '',
       sousType: '',
       marque: '',
       modele: '',
@@ -31,15 +38,28 @@ function Home({ cars }) {
     return savedViewed ? JSON.parse(savedViewed) : [];
   });
   const location = useLocation();
+  const navigate = useNavigate();
 
   const params = new URLSearchParams(location.search);
   const search = params.get('q') || '';
   const carsPerPage = 12;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const heroImages = [
+    'https://images.pexels.com/photos/18886584/pexels-photo-18886584/free-photo-of-la-vue-arriere-de-la-kia-ev5-garee-a-l-exterieur-par-une-journee-ensoleillee.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/919073/pexels-photo-919073.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+    'https://images.pexels.com/photos/8664336/pexels-photo-8664336.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  ];
 
   useEffect(() => {
     if (cars.length > 0) {
       setLoading(false);
+    } else {
+      console.log('Aucune voiture chargée:', cars);
     }
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [cars]);
 
   useEffect(() => {
@@ -54,33 +74,16 @@ function Home({ cars }) {
     localStorage.setItem('filters', JSON.stringify(filters));
   }, [filters]);
 
-  const filteredCars = cars.filter(car => {
-    const matchSearch = !search.trim() || [
-      car.marque,
-      car.modele,
-      car.ville,
-      car.annee,
-      car.boite,
-      car.carburant
-    ].join(' ').toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    if (search.trim()) {
+      console.log('Redirection vers la page de recherche pour:', search);
+      navigate(`/search?q=${encodeURIComponent(search)}`);
+    }
+  }, [search, navigate]);
 
-    const matchFilters =
-      (filters.type === '' || car.type === filters.type) &&
-      (filters.sousType === '' || car.sousType === filters.sousType) &&
-      (filters.marque === '' || car.marque === filters.marque) &&
-      (filters.modele === '' || car.modele === filters.modele) &&
-      (filters.boite === '' || car.boite === filters.boite) &&
-      (filters.ville === '' || car.ville === filters.ville) &&
-      (filters.carburant === '' || car.carburant === filters.carburant) &&
-      (filters.prixMin === '' || car.prix >= parseInt(filters.prixMin || 0)) &&
-      (filters.prixMax === '' || car.prix <= parseInt(filters.prixMax || Infinity));
-
-    return matchSearch && matchFilters;
-  });
-
-  const featuredCars = filteredCars.filter(car => car.isFeatured);
-  const promotedCars = filteredCars.filter(car => car.promotion);
-  const paginatedCars = filteredCars.slice(0, page * carsPerPage);
+  const featuredCars = cars.filter(car => car.isFeatured);
+  const promotedCars = cars.filter(car => car.promotion);
+  const paginatedCars = cars.slice(0, page * carsPerPage);
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const CarCard = ({ car }) => {
@@ -93,34 +96,36 @@ function Home({ cars }) {
     }, [car.id, viewedCars]);
 
     return (
-      <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} key={car.id} className="block group">
-        <div className="bg-white text-black p-2 rounded-xl border border-gold shadow hover:shadow-2xl transition relative h-full">
-          <div className="relative">
+      <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} className="block group">
+        <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full min-h-[20rem]">
+          <div className="relative h-48 overflow-hidden">
             <img
-              src={car.medias?.[0]}
+              src={transformCloudinaryUrl(car.medias?.[0])}
               alt={`${car.marque} ${car.modele}`}
-              className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition"
+              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
               decoding="async"
             />
-            <div className="absolute top-2 right-2 bg-gold text-black px-2 py-1 rounded text-[0.7rem] sm:text-xs font-bold shadow">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-3 py-1 rounded-full text-sm font-bold shadow-md">
               {formatPrice(car.prix)}
             </div>
-            {car.status === 'acheté' && (
-              <div className="absolute -top-3 left-0 bg-red-600 text-white px-2 py-1 rounded text-[0.7rem] font-bold shadow z-10">
-                Déjà Vendu
-              </div>
-            )}
+            <div className="absolute bottom-2 right-2 flex flex-col gap-1">
+              {car.status === 'acheté' && (
+                <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow w-fit">
+                  Déjà Vendu
+                </span>
+              )}
+              {car.promotion && (
+                <span className="bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold shadow w-fit">
+                  {car.promotion.label}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="p-1 relative">
-            <div className="font-bold text-base pt-2">{car.marque} {car.modele}</div>
-            <div className="text-xs text-gray-500">{car.annee} • {car.ville}</div>
-            <div className="text-xs text-gray-500">{car.carburant} • {car.boite}</div>
-            {car.promotion && (
-              <div className="mt-1 bg-yellow-400 text-black px-2 py-1 rounded text-[0.7rem] font-bold shadow">
-                {car.promotion.label}
-              </div>
-            )}
+          <div className="p-2 flex-1">
+            <div className="font-bold text-xl text-white mb-1">{car.marque} {car.modele}</div>
+            <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
+            <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
           </div>
         </div>
       </Link>
@@ -128,18 +133,18 @@ function Home({ cars }) {
   };
 
   const SkeletonCard = () => (
-    <div className="bg-gray-800 p-2 rounded-xl border border-gold shadow animate-pulse">
-      <div className="w-full h-32 bg-gray-700 rounded-lg"></div>
-      <div className="p-1">
-        <div className="h-6 bg-gray-700 rounded w-3/4 mb-2"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/2 mb-1"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/3"></div>
+    <div className="backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg animate-pulse h-full min-h-[20rem]">
+      <div className="w-full h-48 bg-gray-600 rounded-lg"></div>
+      <div className="p-2">
+        <div className="h-6 bg-gray-600 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-600 rounded w-1/2 mb-1"></div>
+        <div className="h-4 bg-gray-600 rounded w-1/3"></div>
       </div>
     </div>
   );
 
   return (
-    <div className="container mx-auto p-4 pt-4 relative">
+    <div className="container mx-auto p-4 pt-16 relative bg-gray-900 min-h-screen text-white">
       <Helmet>
         <title>Autoboss - Voitures à Vendre et à Louer au Sénégal</title>
         <meta name="description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
@@ -149,88 +154,95 @@ function Home({ cars }) {
         <meta property="og:image" content="/logo.png" />
         <meta property="og:url" content={window.location.href} />
       </Helmet>
-      <Filters filters={filters} setFilters={setFilters} title="Trier & Filtrer" />
+
+      <section className="relative h-[60vh] mb-12 bg-gray-900 rounded-2xl overflow-hidden">
+        <div className="absolute inset-0">
+          {heroImages.map((img, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 bg-[url(${img})] bg-cover bg-center transition-opacity duration-1000 ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
+              style={{ backgroundImage: `url(${img})` }}
+            >
+              <img src={img} alt={`Voiture ${index + 1}`} className="w-full h-full object-cover opacity-0" loading="lazy" />
+            </div>
+          ))}
+          <div className="absolute inset-0 bg-black opacity-50"></div>
+        </div>
+        <div className="relative z-10 h-full flex items-center justify-center text-center px-4">
+          <div>
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4 animate-fade-in-up">
+              Conduisez l'Avenir
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-6 animate-fade-in-up delay-200">
+              Trouvez la voiture de vos rêves au Sénégal
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <Filters filters={filters} setFilters={setFilters} />
 
       {loading ? (
-        <div className="text-white text-center py-8 animate-pulse-text">Chargement…</div>
+        <div className="text-center py-8 animate-pulse text-2xl text-yellow-400">Chargement…</div>
       ) : (
         <>
-          {search && (
-            <section>
-              <h2 className="text-xl font-bold text-gold mb-2">Résultats pour "{search}"</h2>
-              {filteredCars.length === 0 ? (
-                <p className="text-white">Aucun résultat.</p>
+          <section className="mb-12 animate-fade-in-up">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-4">Voitures en Vedette</h2>
+            {featuredCars.length === 0 ? (
+              <p className="text-gray-400">Aucune voiture en vedette pour le moment.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {featuredCars.slice(0, 3).map(car => (
+                  <CarCard key={car.id} car={car} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="mb-12 animate-fade-in-up delay-200">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-4">Nos Offres de la Semaine</h2>
+            {promotedCars.length === 0 ? (
+              <p className="text-gray-400">Aucune offre pour le moment.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {promotedCars.slice(0, 6).map(car => (
+                  <CarCard key={car.id} car={car} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="animate-fade-in-up delay-400">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-4">Toutes les Voitures</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {paginatedCars.length > 0 ? (
+                paginatedCars.map(car => <CarCard key={car.id} car={car} />)
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {paginatedCars.map(car => <CarCard car={car} key={car.id} />)}
-                </div>
+                Array.from({ length: carsPerPage }).map((_, index) => <SkeletonCard key={index} />)
               )}
-            </section>
-          )}
-
-          {!search && (
-            <>
-              <section className="mb-6">
-                <h2 className="text-xl font-bold text-gold mb-2">Voitures en Vedette</h2>
-                {featuredCars.length === 0 ? (
-                  <p className="text-white">Aucune voiture en vedette pour le moment.</p>
-                ) : (
-                  <div className="flex overflow-x-auto space-x-4 pb-2">
-                    {featuredCars.slice(0, 5).map(car => (
-                      <div key={car.id} className="min-w-[200px]">
-                        <CarCard car={car} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section className="mb-6">
-                <h2 className="text-xl font-bold text-gold mb-2">Nos Offres de la Semaine</h2>
-                {promotedCars.length === 0 ? (
-                  <p className="text-white">Aucune offre pour le moment.</p>
-                ) : (
-                  <div className="flex overflow-x-auto space-x-4 pb-2">
-                    {promotedCars.slice(0, 6).map(car => (
-                      <div key={car.id} className="min-w-[200px]">
-                        <CarCard car={car} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section>
-                <h2 className="text-xl font-bold text-gold mb-2">Toutes les Voitures</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {paginatedCars.length > 0 ? (
-                    paginatedCars.map(car => <CarCard car={car} key={car.id} />)
-                  ) : (
-                    Array(carsPerPage).fill().map((_, index) => <SkeletonCard key={index} />)
-                  )}
-                </div>
-                {page * carsPerPage < filteredCars.length && (
-                  <button
-                    onClick={() => setPage(p => p + 1)}
-                    className="mt-4 bg-gold text-black px-4 py-2 rounded mx-auto block"
-                  >
-                    Voir plus
-                  </button>
-                )}
-              </section>
-            </>
-          )}
+            </div>
+            {page * carsPerPage < cars.length && (
+              <button
+                onClick={() => setPage(p => p + 1)}
+                className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-full mx-auto block font-semibold hover:from-blue-600 transition-all duration-300"
+              >
+                Voir plus
+              </button>
+            )}
+          </section>
         </>
       )}
 
       {showScroll && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-gold text-black rounded-full p-3 shadow-lg z-50 hover:bg-yellow-400 transition"
+          className="fixed bottom-4 right-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 transition-all duration-200 animate-bounce"
           title="Remonter en haut"
-          aria-label="Remonter en haut de la page"
+          aria-label="Retour en haut de la page"
         >
-          ↑
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+          </svg>
         </button>
       )}
     </div>

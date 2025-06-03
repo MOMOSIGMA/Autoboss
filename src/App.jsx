@@ -13,37 +13,49 @@ import ContactForm from './components/ContactForm';
 import TermsOfUse from './components/TermsOfUse';
 import Signup from './components/Signup';
 import Login from './components/Login';
-import Blog from './components/Blog'; // Ajout du composant Blog
-import BlogPost from './components/BlogPost'; // Ajout du composant BlogPost
+import Blog from './components/Blog';
+import BlogPost from './components/BlogPost';
+import SearchResults from './components/SearchResults';
 import { ToastContainer } from 'react-toastify';
-import { HelmetProvider, Helmet } from 'react-helmet-async'; // Ajout de Helmet
+import { HelmetProvider, Helmet } from 'react-helmet-async';
 import 'react-toastify/dist/ReactToastify.css';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import '@smastrom/react-rating/style.css';
 
 function Achat({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Achat') || [];
   return (
-    <div className="container mx-auto p-4 pt-4">
-      <h2 className="text-xl font-bold text-gold mb-2">Voitures à Vendre</h2>
+    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+      <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Vendre</h2>
       {filteredCars.length === 0 ? (
-        <p className="text-white">Aucune voiture à vendre pour le moment.</p>
+        <p>Aucune voiture à vendre pour le moment.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filteredCars.map(car => (
-            <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} key={car.id} className="block group">
-              <div className="bg-white text-black p-2 rounded-xl border border-gold shadow hover:shadow-2xl transition relative">
-                <img src={car.medias?.[0]} alt={`${car.marque} ${car.modele}`} className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition" loading="lazy" />
-                <div className="absolute top-2 right-2 bg-gold text-black px-2 py-1 rounded text-xs font-bold shadow">{(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA'}</div>
+            <Link
+              to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
+              key={car.id}
+              className="block group"
+            >
+              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+                <img
+                  src={car.medias?.[0] || '/default-car.jpg'}
+                  alt={`${car.marque} ${car.modele}`}
+                  className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
+                  {(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA
+                </div>
                 {car.status === 'acheté' && (
-                  <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow">
+                  <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">
                     Déjà Vendu
-                  </div>
+                  </span>
                 )}
-                <div className="p-1">
-                  <div className="font-bold text-base">{car.marque} {car.modele}</div>
-                  <div className="text-xs text-gray-500">{car.annee} • {car.ville}</div>
-                  <div className="text-xs text-gray-500">{car.carburant} • {car.boite}</div>
+                <div className="p-2">
+                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -57,26 +69,37 @@ function Achat({ cars }) {
 function Location({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Location') || [];
   return (
-    <div className="container mx-auto p-4 pt-4">
-      <h2 className="text-xl font-bold text-gold mb-2">Voitures à Louer</h2>
+    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+      <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Louer</h2>
       {filteredCars.length === 0 ? (
-        <p className="text-white">Aucune voiture à louer pour le moment.</p>
+        <p>Aucune voiture à louer pour le moment.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filteredCars.map(car => (
-            <Link to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`} key={car.id} className="block group">
-              <div className="bg-white text-black p-2 rounded-xl border border-gold shadow hover:shadow-2xl transition relative">
-                <img src={car.medias?.[0]} alt={`${car.marque} ${car.modele}`} className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition" loading="lazy" />
-                <div className="absolute top-2 right-2 bg-gold text-black px-2 py-1 rounded text-xs font-bold shadow">{(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA'}</div>
+            <Link
+              to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
+              key={car.id}
+              className="block group"
+            >
+              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+                <img
+                  src={car.medias?.[0] || '/default-car.jpg'}
+                  alt={`${car.marque} ${car.modele}`}
+                  className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
+                  {(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA
+                </div>
                 {car.status === 'acheté' && (
-                  <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow">
+                  <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">
                     Déjà Vendu
-                  </div>
+                  </span>
                 )}
-                <div className="p-1">
-                  <div className="font-bold text-base">{car.marque} {car.modele}</div>
-                  <div className="text-xs text-gray-500">{car.annee} • {car.ville}</div>
-                  <div className="text-xs text-gray-500">{car.carburant} • {car.boite}</div>
+                <div className="p-2">
+                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -100,62 +123,50 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Initial session checked');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Erreur lors de la vérification de la session:', sessionError.message);
+        } else {
+          console.log('Session initiale vérifiée:', session?.user?.id || 'Aucun utilisateur');
+          setUser(session?.user || null);
         }
-        setUser(session?.user || null);
 
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Fetching cars from Supabase...');
-        }
+        console.log('Chargement des voitures depuis Supabase...');
         const { data, error } = await supabase.from('cars').select('*');
         if (error) {
-          console.error('Supabase error:', error.message);
+          console.error('Erreur Supabase lors du chargement des voitures:', error.message);
           toast.error('Erreur lors du chargement des voitures');
           setCars([]);
         } else {
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('Cars fetched successfully:', data);
-          }
+          console.log('Voitures chargées avec succès:', data.length, 'voitures');
           setCars(data || []);
         }
       } catch (err) {
-        console.error('Unexpected error during initialization:', err.message);
+        console.error('Erreur inattendue lors de l\'initialisation:', err.message);
         toast.error('Une erreur inattendue est survenue');
         setCars([]);
       } finally {
         setLoading(false);
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Loading finished, loading state:', false);
-        }
+        console.log('Chargement terminé, état loading:', false);
       }
     };
 
     initializeApp();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Auth state changed:', event);
-      }
+      console.log('Événement auth changé:', event, 'Utilisateur:', session?.user?.id || 'Aucun');
       setUser(session?.user || null);
     });
 
     const checkTermsAcceptance = () => {
       const accepted = localStorage.getItem('termsAccepted');
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Terms accepted in localStorage:', accepted);
-      }
+      console.log('Conditions acceptées dans localStorage:', accepted);
       if (!accepted) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Setting timer to show terms modal after 20 seconds');
-        }
+        console.log('Planification de l\'affichage du modal des conditions après 20 secondes');
         const timer = setTimeout(() => {
           setShowTermsModal(true);
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('Terms modal shown');
-          }
-        }, 20000); // 20 secondes
+          console.log('Modal des conditions affiché');
+        }, 20000);
         return () => clearTimeout(timer);
       }
     };
@@ -164,12 +175,10 @@ function App() {
 
     const interval = setInterval(() => {
       if (!localStorage.getItem('termsAccepted') && !showTermsModal) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Re-showing terms modal after 20 seconds due to non-acceptance');
-        }
+        console.log('Réaffichage du modal des conditions après 20 secondes');
         setShowTermsModal(true);
       }
-    }, 20000); // Vérifie toutes les 20 secondes
+    }, 20000);
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -183,45 +192,41 @@ function App() {
       if (sessionError || !session) {
         console.error('Erreur lors de la vérification de la session:', sessionError?.message || 'Aucune session active');
         setUser(null);
-        toast.info('Session invalide. Vous avez été déconnecté localement.');
+        toast.info('Session invalide. Déconnexion locale effectuée.');
         return;
       }
 
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Erreur lors de la déconnexion:', error.message);
-        toast.error('Erreur lors de la déconnexion : ' + error.message);
+        toast.error('Erreur lors de la déconnexion');
         setUser(null);
-        toast.info('Déconnexion locale effectuée en raison d\'une erreur serveur.');
+        toast.info('Déconnexion locale effectuée.');
       } else {
         setUser(null);
         toast.success('Déconnexion réussie !');
       }
     } catch (error) {
       console.error('Erreur inattendue lors de la déconnexion:', error.message);
-      toast.error('Une erreur est survenue lors de la déconnexion.');
+      toast.error('Une erreur est survenue lors de la déconnexion');
       setUser(null);
       toast.info('Déconnexion locale effectuée.');
     }
   };
 
   if (loading) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('App is in loading state');
-    }
+    console.log('Application en état de chargement');
     return <div className="text-white text-center mt-10">Chargement...</div>;
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Rendering main App content');
-  }
+  console.log('Rendu du contenu principal de l\'application, voitures:', cars.length);
   return (
     <HelmetProvider>
       <BrowserRouter>
         <Helmet>
           <title>Autoboss - Voitures à Vendre et à Louer</title>
           <meta name="description" content="Achetez ou louez des voitures au Sénégal avec Autoboss. Trouvez des offres incroyables à Dakar et dans d'autres villes." />
-          <meta name="keywords" content="voitures à vendre, voitures à louer, Sénégal, Dakar, Autoboss, Toyota, Hyundai" />
+          <meta name="keywords" content="voitures Sénégal, voitures à vendre, voitures à louer, Dakar, Autoboss, Toyota, Hyundai" />
           <meta property="og:title" content="Autoboss - Voitures à Vendre et à Louer" />
           <meta property="og:description" content="Achetez ou louez des voitures au Sénégal avec Autoboss. Trouvez des offres incroyables à Dakar et dans d'autres villes." />
           <meta property="og:type" content="website" />
@@ -231,6 +236,7 @@ function App() {
         <Routes>
           <Route element={<Layout cars={cars} user={user} handleSignOut={handleSignOut} />}>
             <Route path="/" element={<><Home cars={cars} /><Partners /></>} />
+            <Route path="/search" element={<SearchResults cars={cars} />} />
             <Route path="/voiture/:slug/:id" element={<><CarDetail user={user} /><Partners /></>} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/favorites" element={<Favorites />} />
@@ -247,9 +253,9 @@ function App() {
         </Routes>
         {showTermsModal && !localStorage.getItem('termsAccepted') && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-white text-black p-6 rounded-lg max-w-md">
-              <h2 className="text-xl font-bold mb-4">Conditions d'Utilisation</h2>
-              <p className="mb-4">Veuillez accepter les conditions d'utilisation pour continuer à utiliser pleinement le site :</p>
+            <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md">
+              <h2 className="text-xl font-bold text-yellow-400 mb-4">Conditions d'Utilisation</h2>
+              <p className="mb-4">Veuillez accepter les conditions d'utilisation pour continuer à utiliser le site :</p>
               <div className="mb-4">
                 <Link
                   to="/terms-of-use"
@@ -261,10 +267,11 @@ function App() {
               </div>
               <button
                 onClick={() => {
+                  localStorage.setItem('termsAccepted', 'true');
                   setShowTermsModal(false);
-                  window.location.href = '/terms-of-use';
+                  toast.success('Conditions acceptées !');
                 }}
-                className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-600"
+                className="bg-yellow-400 text-black px-4 py-2 rounded-full hover:bg-yellow-500 transition-all"
               >
                 Accepter
               </button>

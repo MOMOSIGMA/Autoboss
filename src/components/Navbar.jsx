@@ -1,27 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaFacebookF, FaTiktok } from 'react-icons/fa'; // Importer les icônes
+import { FaFacebookF, FaTiktok } from 'react-icons/fa';
+import SearchManager from './SearchManager'; // Nouveau fichier
 
 const Navbar = ({ currentPage, handleNavClick, user, handleSignOut }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const menuRef = useRef(null);
-  const [search, setSearch] = useState('');
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const searchInput = e.target.elements.search.value;
-    if (searchInput.trim()) {
-      navigate(`/?q=${encodeURIComponent(searchInput.trim())}`);
-      setIsOpen(false);
-      handleNavClick('Accueil');
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearch('');
-    navigate('/');
-  };
 
   const handleMenuItemClick = () => {
     setIsOpen(false);
@@ -80,34 +65,7 @@ const Navbar = ({ currentPage, handleNavClick, user, handleSignOut }) => {
             />
           </Link>
         </div>
-        <form onSubmit={handleSearch} className="flex-1 max-w-lg mx-4">
-          <div className="relative">
-            <input
-              type="search"
-              name="search"
-              placeholder="Rechercher une voiture..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full p-2 pl-10 rounded bg-gray-800 text-white border border-gold focus:outline-none focus:ring-2 focus:ring-gold"
-              autoComplete="off"
-              aria-label="Rechercher une voiture"
-            />
-            {search && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 cursor-pointer"
-                aria-label="Effacer la recherche"
-              >
-                ✕
-              </button>
-            )}
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg className="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-          </div>
-        </form>
+        <SearchManager navigate={navigate} handleNavClick={handleNavClick} setIsOpen={setIsOpen} />
         <div className="flex items-center space-x-4">
           <div className="hidden md:flex space-x-4 items-center">
             {navLinks.map(({ to, label }) => (

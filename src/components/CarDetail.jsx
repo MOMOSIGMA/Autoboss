@@ -6,7 +6,7 @@ import { Rating } from '@smastrom/react-rating';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FacebookShareButton, TwitterShareButton, WhatsappShareButton } from 'react-share';
-import { FaWhatsapp, FaFacebookF, FaTwitter, FaLink, FaCopy } from 'react-icons/fa'; // Importation d'icônes modernes
+import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -19,11 +19,19 @@ const maskEmail = (email) => {
   return `${maskedName}@${domain}`;
 };
 
+const transformCloudinaryUrl = (url) => {
+  if (url && url.includes('res.cloudinary.com')) {
+    return url.replace(/\/upload\//, '/upload/w_800,q_auto,f_auto/');
+  }
+  return url;
+};
+
 function CarDetail({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
-  const [modalImg, setModalImg] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [fullScreenOpen, setFullScreenOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [review, setReview] = useState({ rating: 0, comment: '' });
@@ -122,24 +130,24 @@ function CarDetail({ user }) {
     };
   }, [id, currentPage]);
 
+  // Bloquer le scroll de l'arrière-plan lorsque la modale plein écran est ouverte
+  useEffect(() => {
+    if (fullScreenOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [fullScreenOpen]);
+
   const handlePrevMedia = () => {
-    setCurrentMediaIndex((prev) => {
-      const newIndex = prev === 0 ? car.medias.length - 1 : prev - 1;
-      if (modalImg) {
-        setModalImg(car.medias[newIndex]);
-      }
-      return newIndex;
-    });
+    setCurrentMediaIndex((prev) => (prev === 0 ? car.medias.length - 1 : prev - 1));
   };
 
   const handleNextMedia = () => {
-    setCurrentMediaIndex((prev) => {
-      const newIndex = prev === car.medias.length - 1 ? 0 : prev + 1;
-      if (modalImg) {
-        setModalImg(car.medias[newIndex]);
-      }
-      return newIndex;
-    });
+    setCurrentMediaIndex((prev) => (prev === car.medias.length - 1 ? 0 : prev + 1));
   };
 
   const handleAddToFavorites = () => {
@@ -232,23 +240,23 @@ function CarDetail({ user }) {
         </div>
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
-            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
+            <div className="backdrop-blur-md bg-white/10 p-4 sm:p-6 rounded-xl border border-gray-500/30 shadow-lg">
               <div className="relative mb-4 sm:mb-6">
-                <div className="w-full aspect-[16/9] bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="w-full aspect-[16/9] bg-gray-600 rounded-lg animate-pulse"></div>
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-16 h-16 rounded-md bg-gray-300 dark:bg-gray-700 animate-pulse"></div>
+                    <div key={i} className="w-16 h-16 rounded-md bg-gray-600 animate-pulse"></div>
                   ))}
                 </div>
               </div>
-              <div className="h-8 w-3/4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-              <div className="h-6 w-1/2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-              <div className="h-6 w-1/3 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-              <div className="h-4 w-1/4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-              <div className="h-16 w-full bg-gray-300 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+              <div className="h-8 w-3/4 bg-gray-600 rounded animate-pulse mb-2"></div>
+              <div className="h-6 w-1/2 bg-gray-600 rounded animate-pulse mb-2"></div>
+              <div className="h-6 w-1/3 bg-gray-600 rounded animate-pulse mb-2"></div>
+              <div className="h-4 w-1/4 bg-gray-600 rounded animate-pulse mb-2"></div>
+              <div className="h-16 w-full bg-gray-600 rounded animate-pulse mb-4"></div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-40 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                <div className="w-full sm:w-40 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="w-full sm:w-40 h-10 bg-gray-600 rounded-lg animate-pulse"></div>
+                <div className="w-full sm:w-40 h-10 bg-gray-600 rounded-lg animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -262,58 +270,60 @@ function CarDetail({ user }) {
   const shareDescription = car.description || `Découvrez cette ${car.marque} ${car.modele} (${car.annee}) à ${car.ville} pour ${formatPrice(car.prix)} sur Autoboss.`;
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen">
+    <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen text-white">
       <Helmet>
         <title>{`${car.marque} ${car.modele} ${car.annee} à ${car.ville} - Autoboss`}</title>
         <meta name="description" content={car.description || `Découvrez cette ${car.marque} ${car.modele} (${car.annee}) à ${car.ville} pour ${formatPrice(car.prix)}.`} />
         <meta name="keywords" content={`${car.marque}, ${car.modele}, ${car.annee}, ${car.ville}, voiture à vendre, voiture à louer, Autoboss`} />
         <meta property="og:title" content={`${car.marque} ${car.modele} ${car.annee} à ${car.ville} - Autoboss`} />
         <meta property="og:description" content={car.description || `Découvrez cette ${car.marque} ${car.modele} (${car.annee}) à ${car.ville} pour ${formatPrice(car.prix)}.`} />
-        <meta property="og:image" content={car.medias?.[0] || '/logo.png'} />
+        <meta property="og:image" content={transformCloudinaryUrl(car.medias?.[0]) || '/logo.png'} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="product" />
       </Helmet>
       <button
-        onClick={() => navigate(-1)}
-        className="mb-4 sm:mb-6 text-gold text-lg font-semibold flex items-center hover:text-yellow-400 transition"
+        onClick={() => navigate(-1) || navigate('/')}
+        className="mb-4 sm:mb-6 text-yellow-400 text-lg font-semibold flex items-center hover:text-yellow-500 transition"
         aria-label="Retour à la page précédente"
       >
         <span className="mr-2 text-xl">←</span> Retour
       </button>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
-          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl border border-gold shadow-lg">
+          <div className="backdrop-blur-md bg-white/10 p-4 sm:p-6 rounded-xl border border-gray-500/30 shadow-lg">
             <div className="relative mb-4 sm:mb-6">
-              {car.status === 'acheté' && (
-                <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
-                  Déjà Vendu
-                </div>
-              )}
-              {car.promotion && (
-                <div className="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
-                  {car.promotion.label}
-                </div>
-              )}
-              {car.isFeatured && (
-                <div className="absolute top-12 right-2 bg-green-400 text-black px-2 py-1 rounded text-xs sm:text-sm font-bold shadow">
-                  En Vedette
-                </div>
-              )}
+              <div className="flex items-center justify-between mb-2">
+                {car.status === 'acheté' && (
+                  <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow">
+                    Déjà Vendu
+                  </span>
+                )}
+                {car.isFeatured && (
+                  <span className="bg-green-400 text-black px-2 py-1 rounded-full text-xs font-bold shadow">
+                    En Vedette
+                  </span>
+                )}
+                {car.promotion && (
+                  <span className="bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold shadow">
+                    {car.promotion.label}
+                  </span>
+                )}
+              </div>
               {car.medias?.length > 0 && (
-                <div className="relative w-full">
+                <div className="relative flex flex-col items-center">
                   {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
                     <video
-                      src={car.medias[currentMediaIndex]}
+                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
                       controls
-                      className="car-detail-media w-full rounded-lg"
+                      className="w-full max-w-md h-64 md:max-w-4xl md:h-[28rem] rounded-lg"
                       aria-label={`Vidéo de ${car.marque} ${car.modele}`}
                     />
                   ) : (
                     <img
-                      src={car.medias[currentMediaIndex]}
+                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
                       alt={`${car.marque} ${car.modele}`}
-                      className="car-detail-media w-full rounded-lg cursor-pointer"
-                      onClick={() => setModalImg(car.medias[currentMediaIndex])}
+                      className="w-full max-w-md h-64 md:max-w-4xl md:h-[28rem] object-cover rounded-lg cursor-pointer"
+                      onClick={() => setFullScreenOpen(true)}
                       loading="lazy"
                     />
                   )}
@@ -321,7 +331,7 @@ function CarDetail({ user }) {
                     <>
                       <button
                         onClick={handlePrevMedia}
-                        className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                        className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-yellow-400 text-black rounded-full p-2 hover:bg-yellow-500 transition"
                         aria-label="Média précédent"
                       >
                         <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,7 +340,7 @@ function CarDetail({ user }) {
                       </button>
                       <button
                         onClick={handleNextMedia}
-                        className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
+                        className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-yellow-400 text-black rounded-full p-2 hover:bg-yellow-500 transition"
                         aria-label="Média suivant"
                       >
                         <svg className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,13 +354,13 @@ function CarDetail({ user }) {
                       {car.medias.map((url, i) => (
                         <div
                           key={i}
-                          className={`car-detail-thumbnail border-2 ${i === currentMediaIndex ? 'border-gold' : 'border-gray-300 dark:border-gray-600'}`}
+                          className={`border-2 ${i === currentMediaIndex ? 'border-yellow-400' : 'border-gray-600'} rounded-md cursor-pointer transition-all duration-200 hover:border-yellow-400`}
                           onClick={() => setCurrentMediaIndex(i)}
                         >
                           {url.match(/\.(mp4|webm|ogg)$/i) ? (
-                            <div className="relative w-full h-full">
+                            <div className="relative w-16 h-16">
                               <video
-                                src={url}
+                                src={transformCloudinaryUrl(url)}
                                 className="w-full h-full object-cover rounded-md"
                                 aria-label={`Miniature vidéo ${i + 1}`}
                               />
@@ -362,9 +372,9 @@ function CarDetail({ user }) {
                             </div>
                           ) : (
                             <img
-                              src={url}
+                              src={transformCloudinaryUrl(url)}
                               alt={`Miniature ${i + 1} de ${car.marque} ${car.modele}`}
-                              className="w-full h-full object-cover rounded-md"
+                              className="w-16 h-16 object-cover rounded-md"
                               loading="lazy"
                             />
                           )}
@@ -375,69 +385,69 @@ function CarDetail({ user }) {
                 </div>
               )}
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gold mb-2">{car.marque} {car.modele}</h1>
-            <div className="text-base sm:text-lg text-gray-800 dark:text-gray-300 mb-2">{car.annee} • {car.ville} • {car.carburant} • {car.boite}</div>
-            <div className="text-lg sm:text-xl font-bold text-gold mb-2">{formatPrice(car.prix)}</div>
-            <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">{car.type} - {car.sousType}</div>
+            <h1 className="text-3xl font-extrabold text-yellow-400 mb-2">{car.marque} {car.modele}</h1>
+            <div className="text-lg text-gray-300 mb-2">{car.annee} • {car.ville} • {car.carburant} • {car.boite}</div>
+            <div className="text-2xl font-bold text-yellow-400 mb-2">{formatPrice(car.prix)}</div>
+            <div className="text-base font-semibold text-gray-200 mb-2 bg-gray-700 px-3 py-1 rounded">{car.type} - {car.sousType}</div>
             {car.provenance && (
-              <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
+              <div className="text-base font-semibold text-gray-200 mb-2 bg-gray-700 px-3 py-1 rounded">
                 Provenance : {car.provenance}
               </div>
             )}
             {car.startDate && car.type === 'Location' && (
-              <div className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
+              <div className="text-base font-semibold text-gray-200 mb-2 bg-gray-700 px-3 py-1 rounded">
                 Date de début : {new Date(car.startDate).toLocaleDateString()}
               </div>
             )}
-            <p className="text-gray-800 dark:text-gray-300 mb-4">{car.description || 'Aucune description disponible.'}</p>
+            <p className="text-gray-300 mb-4">{car.description || 'Aucune description disponible.'}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleContactSeller}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
+                className="bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-3 rounded-full font-semibold hover:from-green-600 hover:to-green-800 transition-all duration-300 transform hover:scale-105"
                 aria-label="Contacter le vendeur via WhatsApp"
               >
                 Contacter le vendeur
               </button>
               <button
                 onClick={handleAddToFavorites}
-                className="bg-gold text-black px-4 py-2 rounded-lg hover:bg-yellow-400 transition font-semibold"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105"
                 aria-label="Ajouter aux favoris"
               >
                 Ajouter aux favoris
               </button>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center">
-              <h3 className="text-lg font-semibold text-gold mr-4">Partager :</h3>
+              <h3 className="text-lg font-semibold text-yellow-400 mr-4">Partager :</h3>
               <div className="flex gap-3">
                 <WhatsappShareButton url={shareUrl} title={shareTitle} className="focus:outline-none">
-                  <button className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition focus:outline-none" aria-label="Partager sur WhatsApp">
+                  <button className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition-all duration-200 transform hover:scale-110" aria-label="Partager sur WhatsApp">
                     <FaWhatsapp className="h-6 w-6" />
                   </button>
                 </WhatsappShareButton>
                 <FacebookShareButton url={shareUrl} quote={shareTitle} className="focus:outline-none">
-                  <button className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition focus:outline-none" aria-label="Partager sur Facebook">
+                  <button className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-all duration-200 transform hover:scale-110" aria-label="Partager sur Facebook">
                     <FaFacebookF className="h-6 w-6" />
                   </button>
                 </FacebookShareButton>
                 <TwitterShareButton url={shareUrl} title={shareTitle} className="focus:outline-none">
-                  <button className="bg-blue-400 text-white p-2 rounded-full hover:bg-blue-500 transition focus:outline-none" aria-label="Partager sur Twitter">
+                  <button className="bg-blue-400 text-white p-3 rounded-full hover:bg-blue-500 transition-all duration-200 transform hover:scale-110" aria-label="Partager sur Twitter">
                     <FaTwitter className="h-6 w-6" />
                   </button>
                 </TwitterShareButton>
                 <button
                   onClick={handleCopyLink}
-                  className="bg-gray-600 text-white p-2 rounded-full hover:bg-gray-700 transition focus:outline-none"
+                  className="bg-gray-600 text-white p-3 rounded-full hover:bg-gray-700 transition-all duration-200 transform hover:scale-110"
                   aria-label="Copier le lien"
                 >
                   <FaCopy className="h-6 w-6" />
                 </button>
               </div>
             </div>
-            <section className="mt-6 bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h2 className="text-xl font-bold text-gold mb-4 flex items-center">
+            <section className="mt-6 backdrop-blur-md bg-white/10 p-4 rounded-lg shadow-lg">
+              <h2 className="text-2xl font-bold text-yellow-400 mb-4 flex items-center">
                 Avis des utilisateurs
                 {reviews.length > 0 && (
-                  <span className="ml-2 text-sm bg-gold text-black px-2 py-1 rounded">
+                  <span className="ml-2 text-sm bg-yellow-400 text-black px-2 py-1 rounded">
                     {averageRating.toFixed(1)} / 5
                   </span>
                 )}
@@ -462,7 +472,7 @@ function CarDetail({ user }) {
                       name="comment"
                       value={review.comment}
                       onChange={handleReviewChange}
-                      className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gold"
+                      className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                       rows="4"
                       required
                       placeholder="Partagez votre avis..."
@@ -470,7 +480,7 @@ function CarDetail({ user }) {
                   </div>
                   <button
                     type="submit"
-                    className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-600 transition"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-full hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
                   >
                     Soumettre l'avis
                   </button>
@@ -478,7 +488,7 @@ function CarDetail({ user }) {
               ) : (
                 <p className="mb-4 text-gray-300">
                   Connectez-vous pour laisser un avis.{' '}
-                  <Link to="/login" className="text-gold underline hover:text-yellow-400">
+                  <Link to="/login" className="text-yellow-400 underline hover:text-yellow-500">
                     Se connecter
                   </Link>
                 </p>
@@ -488,7 +498,7 @@ function CarDetail({ user }) {
                   <p>Erreur lors du chargement des avis : {reviewsError}</p>
                   <button
                     onClick={handleRetryFetchReviews}
-                    className="mt-2 bg-gold text-black px-3 py-1 rounded hover:bg-yellow-600 transition"
+                    className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 transition-all duration-200"
                   >
                     Réessayer
                   </button>
@@ -525,7 +535,7 @@ function CarDetail({ user }) {
                       <button
                         onClick={handlePrevPage}
                         disabled={currentPage === 1}
-                        className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-600' : 'bg-gold text-black hover:bg-yellow-400'} transition`}
+                        className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-600' : 'bg-yellow-400 text-black hover:bg-yellow-500'} transition-all duration-200`}
                         aria-label="Page précédente des avis"
                       >
                         Précédent
@@ -533,7 +543,7 @@ function CarDetail({ user }) {
                       <button
                         onClick={handleNextPage}
                         disabled={currentPage === Math.ceil(totalReviews / reviewsPerPage)}
-                        className={`px-3 py-1 rounded ${currentPage === Math.ceil(totalReviews / reviewsPerPage) ? 'bg-gray-600' : 'bg-gold text-black hover:bg-yellow-400'} transition`}
+                        className={`px-3 py-1 rounded ${currentPage === Math.ceil(totalReviews / reviewsPerPage) ? 'bg-gray-600' : 'bg-yellow-400 text-black hover:bg-yellow-500'} transition-all duration-200`}
                         aria-label="Page suivante des avis"
                       >
                         Suivant
@@ -549,40 +559,117 @@ function CarDetail({ user }) {
         </div>
       </div>
 
-      {modalImg && (
+      {fullScreenOpen && car.medias?.length > 0 && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-          onClick={() => setModalImg(null)}
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setFullScreenOpen(false)}
         >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={modalImg}
-              alt="Agrandissement"
-              className="max-h-[90vh] max-w-[90vw] object-contain"
-            />
+          <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
+              <video
+                src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                controls
+                className="max-w-[90vw] max-h-[90vh] object-contain"
+                autoPlay
+              />
+            ) : (
+              <img
+                src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                alt={`${car.marque} ${car.modele}`}
+                className="max-w-[90vw] max-h-[90vh] object-contain"
+              />
+            )}
+            {car.medias.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handlePrevMedia(); }}
+                  className="absolute left-4 text-white text-3xl bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 transition"
+                  aria-label="Média précédent"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleNextMedia(); }}
+                  className="absolute right-4 text-white text-3xl bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 transition"
+                  aria-label="Média suivant"
+                >
+                  →
+                </button>
+              </>
+            )}
             <button
-              onClick={() => setModalImg(null)}
-              className="absolute top-4 right-4 bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition"
-              aria-label="Fermer l'image agrandie"
+              onClick={(e) => { e.stopPropagation(); setFullScreenOpen(false); }}
+              className="absolute top-4 right-4 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700 transition-all duration-200 transform hover:scale-110 flex items-center gap-2"
+              aria-label="Fermer l'image en plein écran"
             >
-              Fermer
-            </button>
-            <button
-              onClick={handlePrevMedia}
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-              aria-label="Image précédente"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
+              <span className="text-sm">Retour</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setModalOpen(false)}
+        >
+          <div className="relative backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-gray-500/30 shadow-2xl w-[80%] max-w-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center justify-center">
+                {car.medias?.length > 0 && (
+                  car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
+                    <video
+                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                      controls
+                      className="w-full max-w-md h-48 rounded-lg"
+                      aria-label={`Vidéo de ${car.marque} ${car.modele}`}
+                    />
+                  ) : (
+                    <img
+                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                      alt={`${car.marque} ${car.modele}`}
+                      className="w-full max-w-md h-48 object-cover rounded-lg"
+                      loading="lazy"
+                    />
+                  )
+                )}
+              </div>
+              <div className="flex flex-col justify-between">
+                <div>
+                  <h2 className="text-3xl font-extrabold text-yellow-400 mb-2">{car.marque} {car.modele}</h2>
+                  <p className="text-lg text-gray-300 mb-2">{car.annee} • {car.ville}</p>
+                  <p className="text-lg text-gray-300 mb-2">{car.carburant} • {car.boite}</p>
+                  <p className="text-2xl font-bold text-yellow-400 mb-4">{formatPrice(car.prix)}</p>
+                  <p className="text-gray-300">{car.description || 'Aucune description disponible.'}</p>
+                </div>
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={handleContactSeller}
+                    className="bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-3 rounded-full font-semibold hover:from-green-600 hover:to-green-800 transition-all duration-300 transform hover:scale-105 animate-pulse"
+                    aria-label="Contacter le vendeur via WhatsApp"
+                  >
+                    Contacter le vendeur
+                  </button>
+                  <button
+                    onClick={handleAddToFavorites}
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 animate-pulse"
+                    aria-label="Ajouter aux favoris"
+                  >
+                    Ajouter aux favoris
+                  </button>
+                </div>
+              </div>
+            </div>
             <button
-              onClick={handleNextMedia}
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gold text-black rounded-full p-2 hover:bg-yellow-400 transition"
-              aria-label="Image suivante"
+              onClick={() => setModalOpen(false)}
+              className="absolute top-4 right-4 bg-gray-600 text-white rounded-full p-2 hover:bg-gray-700 transition-all duration-200 transform hover:scale-110"
+              aria-label="Fermer la modale"
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
