@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -6,14 +7,15 @@ import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   server: {
-  host: true,
-},
- plugins: [
+    host: true,
+  },
+  plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
       workbox: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // Augmente la limite à 4 MiB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2,ttf,eot}'],
         globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'],
         cleanupOutdatedCaches: true,
@@ -84,6 +86,12 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
           },
+          {
+            src: '/icons/maskable-icon-512x512.png', // Ajout d’une icône maskable (optionnel)
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable', // Pour les icônes adaptatives (par exemple, iOS)
+          },
         ],
       },
       devOptions: {
@@ -91,7 +99,7 @@ export default defineConfig({
         type: 'module',
       },
       injectRegister: 'auto',
-      includeAssets: ['firebase-messaging-sw.js'],
+      includeAssets: ['firebase-messaging-sw.js', 'firebase-config.js'], // Ajout de firebase-config.js
     }),
   ],
   build: {
