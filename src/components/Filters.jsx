@@ -1,3 +1,4 @@
+// src/components/Filters.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,18 +21,17 @@ const VILLES = [
   "Dakar", "Guédiawaye", "Pikine", "Rufisque", "Bargny", "Keur Massar", "Sébikotane", "Diamniadio", "Thiès", "Mbour", "Tivaouane", "Saint-Louis", "Louga", "Richard-Toll", "Dagana", "Podor", "Matam", "Kanel", "Bakel", "Tambacounda", "Kédougou", "Kolda", "Velingara", "Sédhiou", "Ziguinchor", "Bignona", "Oussouye", "Kaolack", "Nioro du Rip", "Guinguinéo", "Fatick", "Foundiougne", "Gossas", "Kaffrine", "Birkilane", "Malem Hodar", "Autre"
 ];
 const CARBURANTS = ['Essence', 'Diesel', 'Électrique', 'Hybride', 'GPL'];
+const CATEGORIES = ['SUV', 'Sport', 'Familiale', 'Camion', 'Berline', 'Coupé', 'Cabriolet'];
 
 function Filters({ filters, setFilters }) {
   const [sousTypes, setSousTypes] = useState([]);
   const [modeles, setModeles] = useState([]);
   const navigate = useNavigate();
 
-  // Mettre à jour les sous-types quand le type change
   useEffect(() => {
     handleTypeChange({ target: { value: filters.type } });
   }, [filters.type]);
 
-  // Mettre à jour les modèles quand la marque change
   useEffect(() => {
     if (filters.marque && MARQUES_MODELES[filters.marque]) {
       setModeles(MARQUES_MODELES[filters.marque]);
@@ -40,7 +40,6 @@ function Filters({ filters, setFilters }) {
     }
   }, [filters.marque]);
 
-  // Gérer le changement de type (Achat/Location)
   const handleTypeChange = (e) => {
     const type = e.target.value;
     let options = [];
@@ -53,14 +52,11 @@ function Filters({ filters, setFilters }) {
     setFilters({ ...filters, type, sousType: '' });
   };
 
-  // Gérer les changements des autres filtres
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  // Réinitialiser les filtres sans déclencher de recherche
   const resetFilters = () => {
-    console.log('Réinitialisation des filtres');
     const defaultFilters = {
       type: '',
       sousType: '',
@@ -71,6 +67,7 @@ function Filters({ filters, setFilters }) {
       carburant: '',
       prixMin: '',
       prixMax: '',
+      category: '',
     };
     setFilters(defaultFilters);
     setSousTypes([]);
@@ -78,9 +75,7 @@ function Filters({ filters, setFilters }) {
     localStorage.setItem('filters', JSON.stringify(defaultFilters));
   };
 
-  // Appliquer les filtres et naviguer vers la page de recherche
   const applyFilters = () => {
-    console.log('Application des filtres:', filters);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
@@ -153,6 +148,12 @@ function Filters({ filters, setFilters }) {
           <option value="">Carburant</option>
           {CARBURANTS.map(carburant => (
             <option key={carburant} value={carburant}>{carburant}</option>
+          ))}
+        </select>
+        <select name="category" value={filters.category || ''} onChange={handleFilterChange} className="p-2 rounded bg-gray-700 text-white w-full">
+          <option value="">Catégorie</option>
+          {CATEGORIES.map(category => (
+            <option key={category} value={category}>{category}</option>
           ))}
         </select>
         <input

@@ -32,15 +32,16 @@ function Achat({ cars }) {
               key={car.id}
               className="block group"
             >
-              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-yellow-400/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 <img
-                  src={transformCloudinaryUrl(car.medias?.[0])}
+                  src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
                   alt={`${car.marque} ${car.modele}`}
                   className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
-                  {formatPrice(car.prix)}
+                  {formatPrice(car.prix || 0)}
                 </div>
                 {car.status === 'acheté' && (
                   <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">
@@ -76,15 +77,16 @@ function Location({ cars }) {
               key={car.id}
               className="block group"
             >
-              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-yellow-400/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+              <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 <img
-                  src={transformCloudinaryUrl(car.medias?.[0])}
+                  src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
                   alt={`${car.marque} ${car.modele}`}
                   className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
-                  {formatPrice(car.prix)}
+                  {formatPrice(car.prix || 0)}
                 </div>
                 {car.status === 'acheté' && (
                   <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">

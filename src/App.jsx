@@ -24,6 +24,17 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@smastrom/react-rating/style.css';
 
+const formatPrice = (price) => {
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+};
+
+const transformCloudinaryUrl = (url) => {
+  if (url && url.includes('res.cloudinary.com')) {
+    return url.replace('/upload/', '/upload/w_800,q_auto,f_auto/');
+  }
+  return url;
+};
+
 function Achat({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Achat') || [];
   return (
@@ -41,13 +52,14 @@ function Achat({ cars }) {
             >
               <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 <img
-                  src={car.medias?.[0] || '/default-car.jpg'}
+                  src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
                   alt={`${car.marque} ${car.modele}`}
                   className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
-                  {(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA
+                  {formatPrice(car.prix || 0)}
                 </div>
                 {car.status === 'acheté' && (
                   <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">
@@ -55,9 +67,9 @@ function Achat({ cars }) {
                   </span>
                 )}
                 <div className="p-2">
-                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
-                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
-                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
+                  <div className="font-bold text-base mb-1">{car.marque} ${car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • ${car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • ${car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -85,13 +97,14 @@ function Location({ cars }) {
             >
               <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 <img
-                  src={car.medias?.[0] || '/default-car.jpg'}
+                  src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
                   alt={`${car.marque} ${car.modele}`}
                   className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-all duration-300"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded-full text-xs font-bold shadow-md">
-                  {(car.prix || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA
+                  {formatPrice(car.prix || 0)}
                 </div>
                 {car.status === 'acheté' && (
                   <span className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm w-fit">
@@ -99,9 +112,9 @@ function Location({ cars }) {
                   </span>
                 )}
                 <div className="p-2">
-                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
-                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
-                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
+                  <div className="font-bold text-base mb-1">{car.marque} ${car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • ${car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • ${car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -119,6 +132,7 @@ function SecretAdminAccess() {
 function App() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLogo, setShowLogo] = useState(true); // État pour contrôler la visibilité du logo
   const [user, setUser] = useState(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -151,6 +165,10 @@ function App() {
       } finally {
         setLoading(false);
         console.log('Chargement terminé, état loading:', false);
+        // Attendre 2 secondes avant de masquer le logo
+        setTimeout(() => {
+          setShowLogo(false);
+        }, 2000);
       }
     };
 
@@ -167,6 +185,7 @@ function App() {
       if (!accepted) {
         console.log('Planification de l\'affichage du modal des conditions après 20 secondes');
         const timer = setTimeout(() => {
+          setShowLogo(false); // Masquer le logo avant d'afficher le modal
           setShowTermsModal(true);
           console.log('Modal des conditions affiché');
         }, 20000);
@@ -179,6 +198,7 @@ function App() {
     const interval = setInterval(() => {
       if (!localStorage.getItem('termsAccepted') && !showTermsModal) {
         console.log('Réaffichage du modal des conditions après 20 secondes');
+        setShowLogo(false); // Masquer le logo avant de réafficher le modal
         setShowTermsModal(true);
       }
     }, 20000);
@@ -217,9 +237,17 @@ function App() {
     }
   };
 
-  if (loading) {
-    console.log('Application en état de chargement');
-    return <div className="text-white text-center mt-10">Chargement...</div>;
+  if (loading || showLogo) {
+    console.log('Affichage du logo de chargement');
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <img
+          src="/icons/icon-512x512.png"
+          alt="Autoboss Logo"
+          className="w-32 h-32 md:w-40 md:h-40 animate-fade-in"
+        />
+      </div>
+    );
   }
 
   console.log('Rendu du contenu principal de l\'application, voitures:', cars.length);
@@ -230,11 +258,21 @@ function App() {
           <title>Autoboss - Voitures à Vendre et à Louer</title>
           <meta name="description" content="Achetez ou louez des voitures au Sénégal avec Autoboss. Trouvez des offres incroyables à Dakar et dans d'autres villes." />
           <meta name="keywords" content="voitures Sénégal, voitures à vendre, voitures à louer, Dakar, Autoboss, Toyota, Hyundai" />
+          <meta name="mobile-web-app-capable" content="yes" />
           <meta property="og:title" content="Autoboss - Voitures à Vendre et à Louer" />
           <meta property="og:description" content="Achetez ou louez des voitures au Sénégal avec Autoboss. Trouvez des offres incroyables à Dakar et dans d'autres villes." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content={window.location.href} />
           <meta property="og:image" content="/logo.png" />
+          <link rel="preload" href="/icons/icon-512x512.png" as="image" />
+          <script>
+            {`
+              // Polyfill pour Edge
+              if (!window.Promise) {
+                window.Promise = Promise;
+              }
+            `}
+          </script>
         </Helmet>
         <SearchBar setIsOpenMenu={setIsMenuOpen} />
         <Routes>
