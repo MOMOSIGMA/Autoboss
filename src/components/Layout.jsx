@@ -1,3 +1,4 @@
+// src/components/Layout.jsx
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Favorites from './Favorites';
@@ -20,7 +21,7 @@ const transformCloudinaryUrl = (url) => {
 function Achat({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Achat') || [];
   return (
-    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white min-h-screen" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Vendre</h2>
       {filteredCars.length === 0 ? (
         <p>Aucune voiture à vendre pour le moment.</p>
@@ -65,7 +66,7 @@ function Achat({ cars }) {
 function Location({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Location') || [];
   return (
-    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white min-h-screen" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Louer</h2>
       {filteredCars.length === 0 ? (
         <p>Aucune voiture à louer pour le moment.</p>

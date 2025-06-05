@@ -16,7 +16,7 @@ const transformCloudinaryUrl = (url) => {
   return url;
 };
 
-const CarCard = React.memo(({ car }) => {
+const CarCard = React.memo(({ car, animateOnce }) => {
   const [viewedCars, setViewedCars] = useState(() => {
     const savedViewed = localStorage.getItem('viewedCars');
     return savedViewed ? JSON.parse(savedViewed) : [];
@@ -28,14 +28,14 @@ const CarCard = React.memo(({ car }) => {
       setViewedCars(updatedViewed);
       localStorage.setItem('viewedCars', JSON.stringify(updatedViewed));
     }
-  }, [car.id]);
+  }, [car.id, viewedCars]);
 
   return (
     <Link
-      to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}-${car.annee}-${car.ville.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
+      to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
       className="block group"
     >
-      <div className="relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 h-full min-h-[20rem] w-[18rem]">
+      <div className={`relative backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg transition-all duration-300 h-[18rem] w-[16rem] min-h-[18rem] ${animateOnce ? 'animate-fade-in-up' : ''}`}>
         <div className="relative h-48 overflow-hidden rounded-lg">
           <img
             src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
@@ -71,7 +71,7 @@ const CarCard = React.memo(({ car }) => {
 });
 
 const SkeletonCard = () => (
-  <div className="backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg animate-pulse h-full min-h-[20rem] w-[18rem]">
+  <div className="backdrop-blur-md bg-white/10 p-4 rounded-xl border border-gray-500/30 shadow-lg animate-pulse h-[18rem] w-[16rem] min-h-[18rem]">
     <div className="w-full h-48 bg-gray-600 rounded-lg"></div>
     <div className="p-2">
       <div className="h-6 bg-gray-600 rounded w-3/4 mb-2"></div>
@@ -83,7 +83,7 @@ const SkeletonCard = () => (
 
 function Home({ cars }) {
   const [loading, setLoading] = useState(true);
-  const [visibleCarsCount, setVisibleCarsCount] = useState(16); // Initial limit: 16 cars (4 rows of 4 cars)
+  const [visibleCarsCount, setVisibleCarsCount] = useState(16);
   const [filters, setFilters] = useState(() => {
     const savedFilters = localStorage.getItem('filters');
     return savedFilters ? JSON.parse(savedFilters) : {
@@ -101,14 +101,23 @@ function Home({ cars }) {
   });
   const [showScroll, setShowScroll] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const scrollRefs = useRef([]); // Array of refs for each row
+  const scrollRefs = useRef([]);
+  const [showLeftArrows, setShowLeftArrows] = useState([]);
+  const [showRightArrows, setShowRightArrows] = useState([]);
+  const [animateOnce, setAnimateOnce] = useState(() => {
+    const sessionAnimated = sessionStorage.getItem('homeCardsAnimated');
+    if (!sessionAnimated) {
+      sessionStorage.setItem('homeCardsAnimated', 'true'); // Marque immédiatement
+    }
+    return !sessionAnimated;
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const search = params.get('q') || '';
-  const carsPerRow = 4; // 4 cars per row
-  const rowsToShow = Math.ceil(visibleCarsCount / carsPerRow); // Number of rows based on visible cars
+  const carsPerRow = 4;
+  const rowsToShow = Math.ceil(visibleCarsCount / carsPerRow);
 
   const heroImages = [
     {
@@ -124,6 +133,24 @@ function Home({ cars }) {
       alt: 'Voiture blanche sur route'
     },
   ];
+
+  // Fonction pour appliquer les filtres
+  const applyFilters = (carList) => {
+    return carList.filter(car => {
+      const matchesType = filters.type ? car.type === filters.type : true;
+      const matchesSousType = filters.sousType ? car.sousType === filters.sousType : true;
+      const matchesMarque = filters.marque ? car.marque.toLowerCase().includes(filters.marque.toLowerCase()) : true;
+      const matchesModele = filters.modele ? car.modele.toLowerCase().includes(filters.modele.toLowerCase()) : true;
+      const matchesBoite = filters.boite ? car.boite === filters.boite : true;
+      const matchesVille = filters.ville ? car.ville.toLowerCase().includes(filters.ville.toLowerCase()) : true;
+      const matchesCarburant = filters.carburant ? car.carburant === filters.carburant : true;
+      const matchesPrixMin = filters.prixMin ? car.prix >= parseInt(filters.prixMin) : true;
+      const matchesPrixMax = filters.prixMax ? car.prix <= parseInt(filters.prixMax) : true;
+      const matchesCategory = filters.category ? car.category === filters.category : true;
+
+      return matchesType && matchesSousType && matchesMarque && matchesModele && matchesBoite && matchesVille && matchesCarburant && matchesPrixMin && matchesPrixMax && matchesCategory;
+    });
+  };
 
   useEffect(() => {
     if (cars.length > 0) {
@@ -153,20 +180,89 @@ function Home({ cars }) {
     }
   }, [search, navigate]);
 
+  useEffect(() => {
+    const updateArrows = () => {
+      const leftArrows = [];
+      const rightArrows = [];
+      scrollRefs.current.forEach((ref, index) => {
+        if (ref) {
+          const { scrollLeft, scrollWidth, clientWidth } = ref;
+          leftArrows[index] = scrollLeft > 0;
+          rightArrows[index] = scrollLeft < scrollWidth - clientWidth - 1;
+        }
+      });
+      setShowLeftArrows(leftArrows);
+      setShowRightArrows(rightArrows);
+    };
+
+    const handleScrollEvent = () => {
+      updateArrows();
+    };
+
+    scrollRefs.current.forEach((ref) => {
+      if (ref) {
+        ref.addEventListener('scroll', handleScrollEvent);
+      }
+    });
+
+    updateArrows();
+
+    return () => {
+      scrollRefs.current.forEach((ref) => {
+        if (ref) {
+          ref.removeEventListener('scroll', handleScrollEvent);
+        }
+      });
+    };
+  }, [visibleCarsCount, cars]);
+
+  useEffect(() => {
+    const autoScroll = () => {
+      scrollRefs.current.forEach((ref) => {
+        if (ref) {
+          const scrollAmount = 20;
+          ref.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          setTimeout(() => {
+            ref.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+          }, 1000);
+        }
+      });
+    };
+
+    const interval = setInterval(autoScroll, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const loadMoreCars = () => {
-    setVisibleCarsCount((prev) => prev + 16); // Load 16 more cars
+    setVisibleCarsCount((prev) => prev + 16);
   };
 
-  const visibleCars = cars.slice(0, visibleCarsCount); // Limit to visible cars
+  const handleScrollLeft = (rowIndex) => {
+    const ref = scrollRefs.current[rowIndex];
+    if (ref) {
+      ref.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRight = (rowIndex) => {
+    const ref = scrollRefs.current[rowIndex];
+    if (ref) {
+      ref.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
+  // Appliquer les filtres aux voitures
+  const filteredCars = applyFilters(cars);
+  const visibleCars = filteredCars.slice(0, visibleCarsCount);
   const rows = [];
   for (let i = 0; i < visibleCars.length; i += carsPerRow) {
     rows.push(visibleCars.slice(i, i + carsPerRow));
   }
 
   return (
-    <div className="container mx-auto p-4 pt-16 relative bg-gray-900 min-h-screen text-white">
+    <div className="container mx-auto p-4 pt-20 relative bg-gray-900 text-white min-h-screen" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       <Helmet>
         <title>Autoboss - Voitures à Vendre et à Louer au Sénégal</title>
         <meta name="description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
@@ -222,12 +318,12 @@ function Home({ cars }) {
         <>
           <section className="mb-12 animate-fade-in-up">
             <h2 className="text-3xl font-bold text-yellow-400 mb-4">Voitures en Vedette</h2>
-            {cars.filter(car => car.isFeatured).length === 0 ? (
+            {applyFilters(cars.filter(car => car.isFeatured)).length === 0 ? (
               <p className="text-gray-400">Aucune voiture en vedette pour le moment.</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {cars.filter(car => car.isFeatured).slice(0, 3).map(car => (
-                  <CarCard key={car.id} car={car} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {applyFilters(cars.filter(car => car.isFeatured)).map(car => (
+                  <CarCard key={car.id} car={car} animateOnce={false} />
                 ))}
               </div>
             )}
@@ -235,12 +331,12 @@ function Home({ cars }) {
 
           <section className="mb-12 animate-fade-in-up delay-200">
             <h2 className="text-3xl font-bold text-yellow-400 mb-4">Nos Offres de la Semaine</h2>
-            {cars.filter(car => car.promotion).length === 0 ? (
+            {applyFilters(cars.filter(car => car.promotion)).length === 0 ? (
               <p className="text-gray-400">Aucune offre pour le moment.</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {cars.filter(car => car.promotion).slice(0, 6).map(car => (
-                  <CarCard key={car.id} car={car} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {applyFilters(cars.filter(car => car.promotion)).map(car => (
+                  <CarCard key={car.id} car={car} animateOnce={false} />
                 ))}
               </div>
             )}
@@ -251,46 +347,47 @@ function Home({ cars }) {
             {rows.length > 0 ? (
               <div className="space-y-6">
                 {rows.map((row, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    ref={(el) => (scrollRefs.current[rowIndex] = el)}
-                    className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-4"
-                    style={{ scrollBehavior: 'smooth' }}
-                  >
-                    {row.map(car => (
-                      <div key={car.id} className="snap-start flex-shrink-0">
-                        <CarCard car={car} />
-                      </div>
-                    ))}
-                    {row.length < carsPerRow &&
-                      Array(carsPerRow - row.length)
-                        .fill()
-                        .map((_, index) => (
-                          <div key={`skeleton-${rowIndex}-${index}`} className="snap-start flex-shrink-0">
-                            <SkeletonCard />
-                          </div>
-                        ))}
+                  <div key={rowIndex} className="relative">
+                    <div
+                      ref={(el) => (scrollRefs.current[rowIndex] = el)}
+                      className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-4"
+                      style={{ scrollBehavior: 'smooth' }}
+                    >
+                      {row.map(car => (
+                        <div key={car.id} className="snap-start flex-shrink-0">
+                          <CarCard car={car} animateOnce={animateOnce} />
+                        </div>
+                      ))}
+                    </div>
+                    {showLeftArrows[rowIndex] && (
+                      <button
+                        onClick={() => handleScrollLeft(rowIndex)}
+                        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-yellow-400 text-black rounded-full p-2 hover:bg-yellow-500 transition md:hidden"
+                        aria-label="Défiler vers la gauche"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    {showRightArrows[rowIndex] && (
+                      <button
+                        onClick={() => handleScrollRight(rowIndex)}
+                        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-yellow-400 text-black rounded-full p-2 hover:bg-yellow-500 transition md:hidden"
+                        aria-label="Défiler vers la droite"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="space-y-6">
-                {Array(4).fill().map((_, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-4"
-                    style={{ scrollBehavior: 'smooth' }}
-                  >
-                    {Array(carsPerRow).fill().map((_, index) => (
-                      <div key={`skeleton-${rowIndex}-${index}`} className="snap-start flex-shrink-0">
-                        <SkeletonCard />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <p className="text-gray-400">Aucune voiture disponible avec ces filtres.</p>
             )}
-            {visibleCarsCount < cars.length && (
+            {visibleCarsCount < filteredCars.length && (
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={loadMoreCars}
@@ -307,7 +404,7 @@ function Home({ cars }) {
       {showScroll && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-4 right-4 bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 transition-all duration-200 animate-bounce"
+          className="fixed bottom-4 right-4 bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600 transition-all duration-200"
           title="Remonter en haut"
           aria-label="Retour en haut de la page"
         >
@@ -324,6 +421,19 @@ function Home({ cars }) {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
         }
       `}</style>
     </div>

@@ -1,3 +1,4 @@
+// src/components/ContactForm.jsx
 import { useState } from 'react';
 import { supabase } from "../config/supabase";
 import { toast } from 'react-toastify';
@@ -81,16 +82,16 @@ function ContactForm() {
   };
 
   return (
-    <div className="container mx-auto p-4 pt-4">
-      <h2 className="text-xl font-bold text-yellow-400 mb-4 dark:text-yellow-300">Faites une Demande Spécifique</h2>
-      <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg border border-yellow-400 max-w-md mx-auto flex flex-col gap-4 dark:bg-gray-900 dark:border-yellow-300">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white min-h-screen">
+      <h2 className="text-xl font-bold text-yellow-400 mb-4">Faites une Demande Spécifique</h2>
+      <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg border border-yellow-400 max-w-md mx-auto flex flex-col gap-4">
         {/* CHAMPS STANDARD */}
         <input
           type="text"
           placeholder="Votre nom"
           value={formData.name}
           onChange={e => setFormData({ ...formData, name: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           required
         />
         {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
@@ -100,7 +101,7 @@ function ContactForm() {
           placeholder="Email ou téléphone (+221...)"
           value={formData.contact}
           onChange={e => setFormData({ ...formData, contact: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           required
         />
         {errors.contact && <p className="text-red-500 text-sm mt-1">{errors.contact}</p>}
@@ -108,7 +109,7 @@ function ContactForm() {
         <select
           value={formData.car_type}
           onChange={e => setFormData({ ...formData, car_type: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
         >
           <option value="Achat">Achat</option>
           <option value="Location">Location</option>
@@ -116,23 +117,23 @@ function ContactForm() {
 
         {formData.car_type === "Location" && (
           <div className="flex flex-col gap-2">
-            <label className="text-white block dark:text-gray-200">Date de début :</label>
+            <label className="text-white block">Date de début :</label>
             <DatePicker
               selected={locationStart}
               onChange={(date) => setLocationStart(date)}
               dateFormat="dd/MM/yyyy"
               locale="fr"
               placeholderText="Choisissez la date de début"
-              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
-            <label className="text-white block dark:text-gray-200">Date de fin :</label>
+            <label className="text-white block">Date de fin :</label>
             <DatePicker
               selected={locationEnd}
               onChange={(date) => setLocationEnd(date)}
               dateFormat="dd/MM/yyyy"
               locale="fr"
               placeholderText="Choisissez la date de fin"
-              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
           </div>
         )}
@@ -142,21 +143,21 @@ function ContactForm() {
           placeholder="Marque (ex: Toyota)"
           value={formData.marque}
           onChange={e => setFormData({ ...formData, marque: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
         <input
           type="text"
           placeholder="Modèle (ex: Corolla)"
           value={formData.modele}
           onChange={e => setFormData({ ...formData, modele: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
         <input
           type="number"
           placeholder="Budget (en FCFA)"
           value={formData.budget}
           onChange={e => setFormData({ ...formData, budget: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
         {errors.budget && <p className="text-red-500 text-sm mt-1">{errors.budget}</p>}
 
@@ -164,7 +165,7 @@ function ContactForm() {
           placeholder="Détails supplémentaires (ex: couleur, année)"
           value={formData.details}
           onChange={e => setFormData({ ...formData, details: e.target.value })}
-          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
           rows="4"
         />
 
@@ -173,15 +174,15 @@ function ContactForm() {
             type="checkbox"
             checked={formData.notifications}
             onChange={e => setFormData({ ...formData, notifications: e.target.checked })}
-            className="mr-2 rounded text-yellow-400 focus:ring-yellow-400 dark:text-yellow-300"
+            className="mr-2 rounded text-yellow-400 focus:ring-yellow-400"
           />
-          <span className="text-white dark:text-gray-200">Recevoir des notifications</span>
+          <span className="text-white">Recevoir des notifications</span>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-yellow-400 text-black p-2 rounded hover:bg-yellow-500 transition disabled:bg-yellow-300 flex items-center justify-center dark:bg-yellow-300 dark:hover:bg-yellow-400"
+          className="w-full bg-yellow-400 text-black p-2 rounded hover:bg-yellow-500 transition disabled:bg-yellow-300 flex items-center justify-center"
         >
           {loading ? (
             <>

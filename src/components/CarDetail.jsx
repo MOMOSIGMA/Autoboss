@@ -109,7 +109,6 @@ function CarDetail({ user }) {
     };
   }, [id, currentPage]);
 
-  // Bloquer le scroll de l'arrière-plan lorsque la modale plein écran est ouverte
   useEffect(() => {
     if (fullScreenOpen) {
       document.body.style.overflow = 'hidden';
@@ -121,12 +120,29 @@ function CarDetail({ user }) {
     };
   }, [fullScreenOpen]);
 
+  useEffect(() => {
+    const handleFocusTrap = (e) => {
+      const modal = document.querySelector('[role="dialog"]');
+      if (modal && !modal.contains(e.target)) {
+        modal.focus();
+      }
+    };
+
+    if (fullScreenOpen || modalOpen) {
+      document.addEventListener('focusin', handleFocusTrap);
+    }
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusTrap);
+    };
+  }, [fullScreenOpen, modalOpen]);
+
   const handlePrevMedia = () => {
-    setCurrentMediaIndex((prev) => (prev === 0 ? car.medias.length - 1 : prev - 1));
+    setCurrentMediaIndex((prev) => (prev === 0 ? (car.medias?.length || 0) - 1 : prev - 1));
   };
 
   const handleNextMedia = () => {
-    setCurrentMediaIndex((prev) => (prev === car.medias.length - 1 ? 0 : prev + 1));
+    setCurrentMediaIndex((prev) => (prev === (car.medias?.length || 0) - 1 ? 0 : prev + 1));
   };
 
   const handleAddToFavorites = () => {
@@ -213,7 +229,7 @@ function CarDetail({ user }) {
 
   if (loading || !car) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 text-white bg-gray-900 min-h-screen">
+      <div className="container mx-auto p-4 sm:p-6 pt-20 mt-20 text-white bg-gray-900 min-h-screen">
         <div className="mb-4 sm:mb-6">
           <div className="h-6 w-24 bg-gray-700 rounded animate-pulse"></div>
         </div>
@@ -249,7 +265,7 @@ function CarDetail({ user }) {
   const shareDescription = car.description || `Découvrez cette ${car.marque} ${car.modele} (${car.annee}) à ${car.ville} pour ${formatPrice(car.prix)} sur Autoboss.`;
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 bg-gray-900 min-h-screen text-white">
+    <div className="container mx-auto p-4 sm:p-6 pt-20 mt-20 bg-gray-900 min-h-screen text-white">
       <Helmet>
         <title>{`${car.marque} ${car.modele} ${car.annee} à ${car.ville} - Autoboss`}</title>
         <meta name="description" content={car.description || `Découvrez cette ${car.marque} ${car.modele} (${car.annee}) à ${car.ville} pour ${formatPrice(car.prix)}.`} />
@@ -259,6 +275,13 @@ function CarDetail({ user }) {
         <meta property="og:image" content={transformCloudinaryUrl(car.medias?.[0]) || '/logo.png'} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="product" />
+        {car.medias?.length > 0 && (
+          <link
+            rel="preload"
+            href={transformCloudinaryUrl(car.medias[0])}
+            as="image"
+          />
+        )}
       </Helmet>
       <button
         onClick={() => navigate(-1) || navigate('/')}
@@ -288,7 +311,7 @@ function CarDetail({ user }) {
                   </span>
                 )}
               </div>
-              {car.medias?.length > 0 && (
+              {car.medias?.length > 0 ? (
                 <div className="relative flex flex-col items-center">
                   {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
                     <video
@@ -361,6 +384,10 @@ function CarDetail({ user }) {
                       ))}
                     </div>
                   </div>
+                </div>
+              ) : (
+                <div className="w-full max-w-md h-64 md:max-w-4xl md:h-[28rem] bg-gray-600 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-400">Aucune image ou vidéo disponible</p>
                 </div>
               )}
             </div>
@@ -457,7 +484,7 @@ function CarDetail({ user }) {
                   </div>
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 Tropic text-warning text-black px-6 py-2 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105"
                   >
                     Soumettre l'avis
                   </button>
@@ -540,6 +567,9 @@ function CarDetail({ user }) {
         <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 animate-fade-in"
           onClick={() => setFullScreenOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Modale plein écran pour les médias"
         >
           <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
@@ -554,33 +584,38 @@ function CarDetail({ user }) {
                 src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
                 alt={`${car.marque} ${car.modele}`}
                 className="max-w-[90vw] max-h-[90vh] object-contain"
+                loading="lazy"
               />
             )}
             {car.medias.length > 1 && (
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); handlePrevMedia(); }}
-                  className="absolute left-4 text-white text-3xl bg-gray-600 rounded-full p-2 hover:bg-gray-800 transition"
+                  className="absolute left-4 text-white bg-gray-600 rounded-full p-2 hover:bg-gray-800 transition"
                   aria-label="Média précédent"
                 >
-                  ←
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleNextMedia(); }}
-                  className="absolute right-4 text-white bg-gray-600 rounded p-2 hover:bg-gray-800 transition"
-                  aria-label="Next media page"
+                  className="absolute right-4 text-white bg-gray-600 rounded-full p-2 hover:bg-gray-800 transition"
+                  aria-label="Média suivant"
                 >
-                  →
-                  </button>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </>
             )}
             <button
               onClick={() => setFullScreenOpen(false)}
               className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-3 hover:bg-blue-800 transition-all duration-300 flex items-center gap-2"
-              aria-label="Close Fullscreen image"
+              aria-label="Fermer l'image en plein écran"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               <span className="text-sm">Retour</span>
             </button>
@@ -588,30 +623,31 @@ function CarDetail({ user }) {
         </div>
       )}
 
-      {modalOpen && (
+      {modalOpen && car.medias?.length > 0 && (
         <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 animate-fade-in"
           onClick={() => setModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Modale de détails de la voiture"
         >
           <div className="relative backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-gray-500/30 shadow-2xl w-[80%] max-w-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center justify-center">
-                {car.medias?.length > 0 && (
-                  car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
-                    <video
-                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
-                      controls
-                      className="w-full max-w-md h-48 rounded-lg"
-                      aria-label={`Vidéo de ${car.marque} ${car.modele}`}
-                    />
-                  ) : (
-                    <img
-                      src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
-                      alt={`${car.marque} ${car.modele}`}
-                      className="w-full max-w-md h-48 object-cover rounded-lg"
-                      loading="lazy"
-                    />
-                  )
+                {car.medias[currentMediaIndex].match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video
+                    src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                    controls
+                    className="w-full max-w-md h-48 rounded-lg"
+                    aria-label={`Vidéo de ${car.marque} ${car.modele}`}
+                  />
+                ) : (
+                  <img
+                    src={transformCloudinaryUrl(car.medias[currentMediaIndex])}
+                    alt={`${car.marque} ${car.modele}`}
+                    className="w-full max-w-md h-48 object-cover rounded-lg"
+                    loading="lazy"
+                  />
                 )}
               </div>
               <div className="flex flex-col justify-between">
@@ -625,14 +661,14 @@ function CarDetail({ user }) {
                 <div className="flex gap-4 mt-6">
                   <button
                     onClick={handleContactSeller}
-                    className="bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-3 rounded-full font-semibold hover:from-green-600 hover:to-green-800 transition-all duration-300 transform hover:scale-105 animate-pulse"
+                    className="bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-3 rounded-full font-semibold hover:from-green-600 hover:to-green-800 transition-all duration-300 transform hover:scale-105"
                     aria-label="Contacter le vendeur via WhatsApp"
                   >
                     Contacter le vendeur
                   </button>
                   <button
                     onClick={handleAddToFavorites}
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 animate-pulse"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105"
                     aria-label="Ajouter aux favoris"
                   >
                     Ajouter aux favoris

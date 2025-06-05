@@ -5,7 +5,7 @@ import blogPosts from '../data/blogPosts';
 
 function Blog() {
   return (
-    <div className="container mx-auto p-4 pt-4 bg-gray-900 min-h-screen">
+    <div className="container mx-auto p-4 pt-20 bg-gray-900 min-h-screen">
       <Helmet>
         <title>Blog Autoboss - Conseils et Astuces sur les Voitures au Sénégal</title>
         <meta name="description" content="Découvrez des conseils et astuces pour acheter, louer, vendre ou importer une voiture au Sénégal sur le blog Autoboss." />

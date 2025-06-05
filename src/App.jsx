@@ -38,7 +38,7 @@ const transformCloudinaryUrl = (url) => {
 function Achat({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Achat') || [];
   return (
-    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white">
       <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Vendre</h2>
       {filteredCars.length === 0 ? (
         <p>Aucune voiture à vendre pour le moment.</p>
@@ -67,9 +67,9 @@ function Achat({ cars }) {
                   </span>
                 )}
                 <div className="p-2">
-                  <div className="font-bold text-base mb-1">{car.marque} ${car.modele}</div>
-                  <div className="text-sm text-gray-300">{car.annee} • ${car.ville}</div>
-                  <div className="text-sm text-gray-300">{car.carburant} • ${car.boite}</div>
+                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -83,7 +83,7 @@ function Achat({ cars }) {
 function Location({ cars }) {
   const filteredCars = cars?.filter(car => car.type === 'Location') || [];
   return (
-    <div className="container mx-auto p-4 pt-4 bg-gray-900 text-white">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white">
       <h2 className="text-xl font-bold text-yellow-400 mb-2">Voitures à Louer</h2>
       {filteredCars.length === 0 ? (
         <p>Aucune voiture à louer pour le moment.</p>
@@ -112,9 +112,9 @@ function Location({ cars }) {
                   </span>
                 )}
                 <div className="p-2">
-                  <div className="font-bold text-base mb-1">{car.marque} ${car.modele}</div>
-                  <div className="text-sm text-gray-300">{car.annee} • ${car.ville}</div>
-                  <div className="text-sm text-gray-300">{car.carburant} • ${car.boite}</div>
+                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
+                  <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -132,7 +132,7 @@ function SecretAdminAccess() {
 function App() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showLogo, setShowLogo] = useState(true); // État pour contrôler la visibilité du logo
+  const [showLogo, setShowLogo] = useState(true);
   const [user, setUser] = useState(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -165,7 +165,6 @@ function App() {
       } finally {
         setLoading(false);
         console.log('Chargement terminé, état loading:', false);
-        // Attendre 2 secondes avant de masquer le logo
         setTimeout(() => {
           setShowLogo(false);
         }, 2000);
@@ -185,7 +184,7 @@ function App() {
       if (!accepted) {
         console.log('Planification de l\'affichage du modal des conditions après 20 secondes');
         const timer = setTimeout(() => {
-          setShowLogo(false); // Masquer le logo avant d'afficher le modal
+          setShowLogo(false);
           setShowTermsModal(true);
           console.log('Modal des conditions affiché');
         }, 20000);
@@ -198,7 +197,7 @@ function App() {
     const interval = setInterval(() => {
       if (!localStorage.getItem('termsAccepted') && !showTermsModal) {
         console.log('Réaffichage du modal des conditions après 20 secondes');
-        setShowLogo(false); // Masquer le logo avant de réafficher le modal
+        setShowLogo(false);
         setShowTermsModal(true);
       }
     }, 20000);
@@ -267,7 +266,6 @@ function App() {
           <link rel="preload" href="/icons/icon-512x512.png" as="image" />
           <script>
             {`
-              // Polyfill pour Edge
               if (!window.Promise) {
                 window.Promise = Promise;
               }

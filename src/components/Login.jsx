@@ -1,3 +1,4 @@
+// src/components/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
@@ -23,9 +24,9 @@ function Login() {
   };
 
   return (
-    <div className="container mx-auto p-4 pt-4 text-white">
-      <h2 className="text-xl font-bold text-gold mb-4">Connexion</h2>
-      <form onSubmit={handleLogin} className="max-w-md">
+    <div className="container mx-auto p-4 pt-20 mt-20 bg-gray-900 text-white min-h-screen" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
+      <h2 className="text-xl font-bold text-yellow-400 mb-4">Connexion</h2>
+      <form onSubmit={handleLogin} className="max-w-md mx-auto">
         <div className="mb-4">
           <label className="block mb-1">Email</label>
           <input
@@ -48,7 +49,7 @@ function Login() {
         </div>
         <button
           type="submit"
-          className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-600"
+          className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-500"
         >
           Se connecter
         </button>
