@@ -1,9 +1,9 @@
-// src/components/Layout.jsx
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Favorites from './Favorites';
 import ContactForm from './ContactForm';
 import Navbar from './Navbar';
+import Footer from './Footer';
 import TermsOfUse from './TermsOfUse';
 import { toast } from 'react-toastify';
 
@@ -155,12 +155,7 @@ function Layout({ cars, user, handleSignOut }) {
           {currentPage === 'Achat' ? <Achat cars={cars} /> : currentPage === 'Location' ? <Location cars={cars} /> : currentPage === 'Favoris' ? <Favorites /> : currentPage === 'Contact' ? <Contact /> : currentPage === 'Conditions' ? <TermsOfUse /> : <Outlet />}
         </main>
       </div>
-      <footer className="bg-gray-900 text-white p-4 text-center border-t border-yellow-400">
-        <p>
-          Contactez-nous : <a href="https://wa.me/+221762641751" className="text-yellow-400 underline hover:text-yellow-500">+221 76 264 17 51</a> |{' '}
-          <Link to="/terms-of-use" className="text-yellow-400 underline hover:text-yellow-500">Conditions d'Utilisation</Link>
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

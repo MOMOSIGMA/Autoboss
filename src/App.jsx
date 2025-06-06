@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from './config/supabase';
@@ -8,7 +7,6 @@ import Home from './components/Home';
 import CarDetail from './components/CarDetail';
 import Admin from './components/Admin';
 import Layout from './components/Layout';
-import Partners from './components/Partners';
 import Favorites from './components/Favorites';
 import ContactForm from './components/ContactForm';
 import TermsOfUse from './components/TermsOfUse';
@@ -112,9 +110,9 @@ function Location({ cars }) {
                   </span>
                 )}
                 <div className="p-2">
-                  <div className="font-bold text-base mb-1">{car.marque} {car.modele}</div>
+                  <div className="font-bold text-base mb-1">{car.marque} ${car.modele}</div>
                   <div className="text-sm text-gray-300">{car.annee} • {car.ville}</div>
-                  <div className="text-sm text-gray-300">{car.carburant} • {car.boite}</div>
+                  <div className="text-sm text-gray-300">{car.carburant} • ${car.boite}</div>
                 </div>
               </div>
             </Link>
@@ -233,6 +231,7 @@ function App() {
       toast.error('Une erreur est survenue lors de la déconnexion');
       setUser(null);
       toast.info('Déconnexion locale effectuée.');
+      return;
     }
   };
 
@@ -275,9 +274,9 @@ function App() {
         <SearchBar setIsOpenMenu={setIsMenuOpen} />
         <Routes>
           <Route element={<Layout cars={cars} user={user} handleSignOut={handleSignOut} setIsOpenMenu={setIsMenuOpen} />}>
-            <Route path="/" element={<><Home cars={cars} /><Partners /></>} />
+            <Route path="/" element={<Home cars={cars} />} />
             <Route path="/search" element={<SearchResults cars={cars} />} />
-            <Route path="/voiture/:slug/:id" element={<><CarDetail user={user} /><Partners /></>} />
+            <Route path="/voiture/:slug/:id" element={<CarDetail user={user} />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/contact" element={<ContactForm />} />
