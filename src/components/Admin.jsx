@@ -272,7 +272,7 @@ function Admin() {
         } else {
           if (isMounted) {
             setIsAdmin(false);
-            navigate('/');
+            // Ne pas rediriger immédiatement - l'utilisateur peut rester sur /admin et verra un message
           }
         }
       }
@@ -571,11 +571,15 @@ function Admin() {
   if (!isAdmin) {
     return (
       <div className="container mx-auto p-4 pt-4 bg-gray-900 min-h-screen text-white text-center">
-        <h2 className="text-2xl font-bold text-gold mb-6">Accès Refusé</h2>
-        <p className="mb-4">Vous n'avez pas les autorisations nécessaires pour accéder à cette page. Seuls les administrateurs sont autorisés.</p>
-        <Link to="/" className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-400 transition font-semibold">
+        <h2 className="text-2xl font-bold text-gold mb-6">Accès Admin</h2>
+        <p className="mb-4">Vous êtes connecté mais pas enregistré en tant qu'administrateur.</p>
+        <p className="mb-6 text-yellow-400">Pour utiliser le panel admin, contactez un administrateur ou créez un compte admin dans Supabase.</p>
+        <Link to="/" className="bg-gold text-black px-4 py-2 rounded hover:bg-yellow-400 transition font-semibold mr-2">
           Retourner à l'accueil
         </Link>
+        <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+          Déconnexion
+        </button>
       </div>
     );
   }

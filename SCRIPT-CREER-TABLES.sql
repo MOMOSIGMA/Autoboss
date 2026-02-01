@@ -57,6 +57,14 @@ CREATE TABLE public.profiles (
     created_at timestamp with time zone DEFAULT now()
 );
 
+-- 4️⃣ TABLE USERS (Rôles et permissions)
+CREATE TABLE public.users (
+    id uuid NOT NULL PRIMARY KEY REFERENCES auth.users(id),
+    email text NOT NULL UNIQUE,
+    role text DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+    created_at timestamp with time zone DEFAULT now()
+);
+
 -- 5️⃣ TABLE REQUESTS (Demandes)
 CREATE TABLE public.requests (
     id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
@@ -113,6 +121,17 @@ CREATE POLICY "Users can view own profile" ON public.profiles
 
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
+
+-- USERS: Seulement les admins peuvent voir et modifier
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own user data" ON public.users
+    FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Only admins can update users" ON public.users
+    FOR UPDATE USING (
+        (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
+    );
 
 -- ✅ C'EST TOUT!
 -- Votre base de données est prête
