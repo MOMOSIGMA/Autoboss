@@ -78,6 +78,32 @@ CREATE TABLE public.requests (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 6️⃣ TABLE REVIEWS (Avis sur les voitures)
+CREATE TABLE public.reviews (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    car_id uuid NOT NULL REFERENCES public.cars(id) ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+CREATE INDEX idx_reviews_car_id ON public.reviews(car_id);
+CREATE INDEX idx_reviews_user_id ON public.reviews(user_id);
+
+-- 7️⃣ VIEW REVIEWS_WITH_USER (Vue pour afficher les avis avec les noms d'utilisateurs)
+CREATE OR REPLACE VIEW public.reviews_with_user AS
+SELECT 
+    r.id,
+    r.car_id,
+    r.rating,
+    r.comment,
+    r.created_at,
+    COALESCE(p.full_name, u.email) as full_name
+FROM public.reviews r
+LEFT JOIN public.profiles p ON r.user_id = p.id
+LEFT JOIN auth.users u ON r.user_id = u.id;
+
 -- ✅ ROW LEVEL SECURITY (RLS)
 
 -- CARS: Tout le monde peut lire, seulement authentifiés peuvent modifier
@@ -132,6 +158,21 @@ CREATE POLICY "Only admins can update users" ON public.users
     FOR UPDATE USING (
         (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
     );
+
+-- REVIEWS: Tout le monde peut lire, authentifiés peuvent créer
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read reviews" ON public.reviews
+    FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated can insert reviews" ON public.reviews
+    FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Users can update own reviews" ON public.reviews
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own reviews" ON public.reviews
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- ✅ C'EST TOUT!
 -- Votre base de données est prête
