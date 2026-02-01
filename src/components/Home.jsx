@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from "../config/supabase";
 import Filters from './Filters';
+import { useSEO, addStructuredData, createItemListSchema } from '../hooks/useSEO';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -88,6 +89,25 @@ function Home() {
     return matchSearch && matchFilters;
   });
 
+  // SEO dynamique
+  useSEO({
+    title: search 
+      ? `Recherche: ${search} - ${filteredCars.length} résultats | Autoboss`
+      : 'Autoboss - Vente et Location de Voitures au Sénégal | Dakar, Thiès',
+    description: search
+      ? `${filteredCars.length} voitures trouvées pour "${search}". Vente et location de voitures au Sénégal.`
+      : 'Découvrez les meilleures offres de vente et location de voitures au Sénégal. Véhicules neufs et d\'occasion à Dakar, Thiès. Prix compétitifs, qualité garantie.',
+    image: 'https://autoboss.sn/og-image.jpg',
+    url: search ? `https://autoboss.sn/?q=${search}` : 'https://autoboss.sn/'
+  });
+
+  // Ajouter structured data pour la liste de voitures
+  useEffect(() => {
+    if (filteredCars.length > 0) {
+      addStructuredData(createItemListSchema(filteredCars, search ? `Résultats pour "${search}"` : 'Voitures disponibles'));
+    }
+  }, [filteredCars, search]);
+
   const paginatedCars = filteredCars.slice(0, page * carsPerPage);
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -106,7 +126,7 @@ function Home() {
           <div className="relative">
             <img 
               src={car.medias?.[0]} 
-              alt={`${car.marque} ${car.modele}`} 
+              alt={`${car.marque} ${car.modele} ${car.annee} à vendre à ${car.ville} - ${formatPrice(car.prix)}`} 
               className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition" 
               loading="lazy"
               decoding="async"

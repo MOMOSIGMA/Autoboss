@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from "../config/supabase";
+import { useSEO, addStructuredData, createProductSchema } from '../hooks/useSEO';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
@@ -31,10 +32,21 @@ function CarDetail() {
         const carData = { id: data.id, ...data };
         carData.description = carData.description || '';
         setCar(carData);
+        
+        // Add structured data for SEO
+        addStructuredData(createProductSchema(carData));
       }
     };
     fetchCar();
   }, [id]);
+
+  // Dynamic SEO
+  useSEO({
+    title: car ? `${car.marque} ${car.modele} ${car.annee} - ${formatPrice(car.prix)} | Autoboss` : 'Détails de la voiture | Autoboss',
+    description: car ? `${car.marque} ${car.modele} ${car.annee} à ${car.ville}. ${car.type} - ${formatPrice(car.prix)}. ${car.description || ''}`.substring(0, 160) : 'Découvrez les détails de cette voiture',
+    image: car?.medias?.[0] || 'https://autoboss.sn/og-image.jpg',
+    url: `https://autoboss.sn/details/${id}`
+  });
 
   const handlePrevMedia = () => {
     setCurrentMediaIndex((prev) => (prev === 0 ? car.medias.length - 1 : prev - 1));
