@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FacebookShareButton, TwitterShareButton, WhatsappShareButton } from 'react-share';
 import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
+import { useSEO } from '../hooks/useSEO';
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
