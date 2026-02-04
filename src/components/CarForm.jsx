@@ -162,13 +162,21 @@ export default function CarForm({ onSubmit, initialData, setEditingCar, isSubmit
   };
 
   return (
+    <div className="relative">
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit({ ...car, modele: getFinalModele() });
+        if (!isSubmitting) {
+          onSubmit({ ...car, modele: getFinalModele() });
+        }
       }}
       className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-gray-800 text-white p-4 rounded-md shadow max-w-lg mx-auto border border-gray-600"
     >
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-40 rounded-md flex items-center justify-center">
+          <div className="text-white text-xl font-bold">Traitement en cours...</div>
+        </div>
+      )}
       <label>
         Marque
         <select
@@ -464,5 +472,6 @@ export default function CarForm({ onSubmit, initialData, setEditingCar, isSubmit
         document.body
       )}
     </form>
+    </div>
   );
 }

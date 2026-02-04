@@ -402,6 +402,10 @@ function Admin() {
       setUploadProgress(100);
       fetchCars();
       toast.success('Voiture ajoutée avec succès !');
+      // Réinitialiser le formulaire après ajout réussi
+      setTimeout(() => {
+        window.location.reload(); // Recharger pour vider complètement le formulaire
+      }, 1000);
     }
     resetUpload();
   };
@@ -621,15 +625,19 @@ function Admin() {
         </button>
       </div>
       {isUploading && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur border-b border-gray-700">
-          <div className="max-w-6xl mx-auto px-4 py-3">
-            <div className="w-full bg-gray-700 rounded-full h-3">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-gray-800 p-8 rounded-lg border-2 border-gold shadow-2xl max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-gold mb-4 text-center">Ajout en cours...</h3>
+            <div className="w-full bg-gray-700 rounded-full h-6 mb-4">
               <div
-                className="bg-gold h-3 rounded-full transition-all duration-300"
+                className="bg-gold h-6 rounded-full transition-all duration-300 flex items-center justify-center text-black font-bold text-sm"
                 style={{ width: `${uploadProgress}%` }}
-              ></div>
+              >
+                {uploadProgress > 10 && `${Math.round(uploadProgress)}%`}
+              </div>
             </div>
-            <p className="text-white mt-2 text-sm">Progression : {Math.round(uploadProgress)}%</p>
+            <p className="text-white text-center text-lg">Progression : {Math.round(uploadProgress)}%</p>
+            <p className="text-gray-400 text-center text-sm mt-2">Veuillez patienter, ne fermez pas cette page...</p>
           </div>
         </div>
       )}
