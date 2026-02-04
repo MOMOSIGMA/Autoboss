@@ -10,7 +10,7 @@ const formatPrice = (price) => {
 
 const transformCloudinaryUrl = (url) => {
   if (url && url.includes('res.cloudinary.com')) {
-    return url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
+    return url.replace('/upload/', '/upload/w_300,h_200,c_fill,q_auto:low,f_webp/');
   }
   return url;
 };
@@ -34,17 +34,17 @@ const CarCard = React.memo(({ car }) => {
       to={`/voiture/${car.marque.toLowerCase().replace(/\s+/g, '-')}-${car.modele.toLowerCase().replace(/\s+/g, '-')}/${car.id}`}
       className="block group"
     >
-      <div className="relative backdrop-blur-md bg-white/10 p-3 rounded-lg border border-gray-500/30 shadow-md transition-all duration-300 w-full h-[14rem]">
-        <div className="relative h-32 overflow-hidden rounded-md">
+      <div className="relative backdrop-blur-md bg-white/10 p-2 rounded-lg border border-gray-500/30 shadow-md transition-all duration-200 w-full h-[11rem] hover:shadow-lg hover:border-yellow-400/50">
+        <div className="relative h-24 overflow-hidden rounded-md mb-1">
           <img
             src={transformCloudinaryUrl(car.medias?.[0]) || '/default-car.jpg'}
             alt={`${car.marque} ${car.modele}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
             loading="lazy"
             decoding="async"
           />
-          <div className="absolute top-1 left-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm">
-            {formatPrice(car.prix || 0)}
+          <div className="absolute top-1 left-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm">
+            {(car.prix / 1000000).toFixed(1)}M
           </div>
           {car.status === 'acheté' && (
             <span className="absolute bottom-1 right-1 bg-red-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm">
@@ -57,10 +57,10 @@ const CarCard = React.memo(({ car }) => {
             </span>
           )}
         </div>
-        <div className="p-2">
-          <div className="font-semibold text-lg text-white truncate">{car.marque} {car.modele}</div>
-          <div className="text-xs text-gray-300 truncate">{car.annee} • {car.ville}</div>
-          <div className="text-xs text-gray-300 truncate">{car.carburant} • {car.boite}</div>
+        <div className="px-1">
+          <div className="font-semibold text-sm text-white truncate leading-tight">{car.marque} {car.modele}</div>
+          <div className="text-[10px] text-gray-300 truncate">{car.annee} • {car.ville}</div>
+          <div className="text-[10px] text-gray-400 truncate">{car.carburant[0]} • {car.boite[0]}</div>
         </div>
       </div>
     </Link>
@@ -68,12 +68,12 @@ const CarCard = React.memo(({ car }) => {
 });
 
 const SkeletonCard = () => (
-  <div className="backdrop-blur-md bg-white/10 p-3 rounded-lg border border-gray-500/30 shadow-md animate-pulse w-full h-[14rem]">
-    <div className="w-full h-32 bg-gray-600 rounded-md"></div>
-    <div className="p-2">
-      <div className="h-5 bg-gray-600 rounded w-3/4 mb-1"></div>
-      <div className="h-3 bg-gray-600 rounded w-1/2 mb-1"></div>
-      <div className="h-3 bg-gray-600 rounded w-1/3"></div>
+  <div className="backdrop-blur-md bg-white/10 p-2 rounded-lg border border-gray-500/30 shadow-md animate-pulse w-full h-[11rem]">
+    <div className="w-full h-24 bg-gray-600 rounded-md mb-1"></div>
+    <div className="px-1">
+      <div className="h-4 bg-gray-600 rounded w-3/4 mb-1"></div>
+      <div className="h-3 bg-gray-600 rounded w-1/2 mb-0.5"></div>
+      <div className="h-2 bg-gray-600 rounded w-1/3"></div>
     </div>
   </div>
 );
@@ -243,7 +243,7 @@ function Home({ cars }) {
         ))}
       </Helmet>
 
-      <section className="relative h-[30vh] mb-6 bg-gray-900 rounded-xl overflow-hidden">
+      <section className="relative h-[20vh] mb-4 bg-gray-900 rounded-xl overflow-hidden">
         <div className="absolute inset-0">
           {heroImages.map((image, index) => (
             <div
@@ -263,8 +263,8 @@ function Home({ cars }) {
         </div>
         <div className="relative z-10 h-full flex items-center justify-center text-center px-4">
           <div>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">Conduisez l'Avenir</h1>
-            <p className="text-base md:text-lg text-gray-300 mb-4">Trouvez la voiture de vos rêves au Sénégal</p>
+            <h1 className="text-2xl md:text-4xl font-extrabold text-white mb-2">Conduisez l'Avenir</h1>
+            <p className="text-sm md:text-base text-gray-300">Trouvez la voiture de vos rêves au Sénégal</p>
           </div>
         </div>
       </section>
@@ -362,7 +362,7 @@ function Home({ cars }) {
             {filteredCars.length === 0 ? (
               <p className="text-gray-400">Aucune voiture disponible avec ces filtres.</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                 {filteredCars.map(car => (
                   <CarCard key={car.id} car={car} />
                 ))}
