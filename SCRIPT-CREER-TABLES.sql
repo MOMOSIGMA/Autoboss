@@ -133,6 +133,21 @@ ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read partners" ON public.partners
     FOR SELECT TO anon, authenticated USING (true);
 
+CREATE POLICY "Admins can insert partners" ON public.partners
+    FOR INSERT TO authenticated WITH CHECK (
+        (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
+    );
+
+CREATE POLICY "Admins can update partners" ON public.partners
+    FOR UPDATE TO authenticated USING (
+        (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
+    );
+
+CREATE POLICY "Admins can delete partners" ON public.partners
+    FOR DELETE TO authenticated USING (
+        (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
+    );
+
 -- REQUESTS: Tout le monde peut créer
 ALTER TABLE public.requests ENABLE ROW LEVEL SECURITY;
 

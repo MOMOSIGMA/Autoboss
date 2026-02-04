@@ -39,7 +39,7 @@ const AdminLogin = ({ onLogin, login, setLogin }) => {
   );
 };
 
-const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars, handleAddCar, handleUpdateCar, handleDeleteCar, handleMarkAsSold }) => {
+const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars, handleAddCar, handleUpdateCar, handleDeleteCar, handleMarkAsSold, isSubmittingCar, isUploading }) => {
   const handleEditCar = (car) => {
     setEditingCar({ ...car, selectedFiles: [], mediasToRemove: [] });
   };
@@ -54,6 +54,7 @@ const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars
           onSubmit={editingCar ? handleUpdateCar : handleAddCar}
           initialData={editingCar}
           setEditingCar={setEditingCar}
+          isSubmitting={isSubmittingCar || isUploading}
         />
         {editingCar && (
           <button
@@ -133,7 +134,7 @@ const CarManagement = ({ cars, editingCar, setEditingCar, fetchCars, loadingCars
   );
 };
 
-const PartnerManagement = ({ partners, loadingPartners, newPartner, setNewPartner, fetchPartners, handleAddPartner, handleDeletePartner, isAdmin }) => {
+const PartnerManagement = ({ partners, loadingPartners, newPartner, setNewPartner, fetchPartners, handleAddPartner, handleDeletePartner, isAdmin, isSubmittingPartner }) => {
   return (
     <>
       <h3 className="text-xl font-bold text-gold mb-4 mt-8">Gérer les Partenaires</h3>
@@ -155,8 +156,12 @@ const PartnerManagement = ({ partners, loadingPartners, newPartner, setNewPartne
           required
           aria-label="Logo du partenaire"
         />
-        <button type="submit" className="w-full bg-gold text-black p-3 rounded hover:bg-yellow-400 transition font-semibold" disabled={!isAdmin}>
-          {isAdmin ? 'Ajouter Partenaire' : 'Réservé aux admins'}
+        <button
+          type="submit"
+          className={`w-full bg-gold text-black p-3 rounded transition font-semibold ${!isAdmin || isSubmittingPartner ? 'opacity-60 cursor-not-allowed' : 'hover:bg-yellow-400'}`}
+          disabled={!isAdmin || isSubmittingPartner}
+        >
+          {isSubmittingPartner ? 'Ajout en cours...' : (isAdmin ? 'Ajouter Partenaire' : 'Réservé aux admins')}
         </button>
       </form>
       {loadingPartners ? (
@@ -205,6 +210,8 @@ function Admin() {
   const [loadingPartners, setLoadingPartners] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmittingCar, setIsSubmittingCar] = useState(false);
+  const [isSubmittingPartner, setIsSubmittingPartner] = useState(false);
   const [isLoadingRole, setIsLoadingRole] = useState(true);
   const navigate = useNavigate();
 
@@ -327,6 +334,10 @@ function Admin() {
   };
 
   const handleAddCar = async (car) => {
+    if (isSubmittingCar || isUploading) {
+      toast.info('Ajout en cours, veuillez patienter...');
+      return;
+    }
     if (!car.selectedFiles?.length) {
       toast.error('Veuillez ajouter au moins une image ou vidéo.');
       return;
@@ -335,11 +346,17 @@ function Admin() {
       toast.error('Vous ne pouvez ajouter au maximum que 6 fichiers.');
       return;
     }
+    setIsSubmittingCar(true);
     setIsUploading(true);
     setUploadProgress(0);
     const urls = [];
     const totalFiles = car.selectedFiles.length;
     let completedFiles = 0;
+    const resetUpload = () => {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setIsSubmittingCar(false);
+    };
 
     for (const file of car.selectedFiles) {
       if (typeof file === 'string') {
@@ -361,16 +378,14 @@ function Admin() {
           urls.push(data.secure_url);
         } else {
           toast.error(`Erreur Cloudinary : ${data.error?.message || 'Upload échoué'}`);
-          setIsUploading(false);
-          setUploadProgress(0);
+          resetUpload();
           return;
         }
         completedFiles++;
         setUploadProgress((completedFiles / totalFiles) * 80);
       } catch (error) {
         toast.error('Erreur lors de l\'upload de l\'image');
-        setIsUploading(false);
-        setUploadProgress(0);
+        resetUpload();
         return;
       }
     }
@@ -388,8 +403,7 @@ function Admin() {
       fetchCars();
       toast.success('Voiture ajoutée avec succès !');
     }
-    setIsUploading(false);
-    setUploadProgress(0);
+    resetUpload();
   };
 
   const handleDeleteCar = async (carId) => {
@@ -405,6 +419,10 @@ function Admin() {
   };
 
   const handleUpdateCar = async (car) => {
+    if (isSubmittingCar || isUploading) {
+      toast.info('Mise à jour en cours, veuillez patienter...');
+      return;
+    }
     if (!car.medias?.length && !car.selectedFiles?.length) {
       toast.error('Veuillez conserver ou ajouter au moins une image ou vidéo.');
       return;
@@ -413,12 +431,18 @@ function Admin() {
       toast.error('Vous ne pouvez avoir au maximum que 6 fichiers.');
       return;
     }
+    setIsSubmittingCar(true);
     setIsUploading(true);
     setUploadProgress(0);
     const existingMedias = car.medias.filter(url => !car.mediasToRemove.includes(url));
     const newUrls = [];
     const totalFiles = car.selectedFiles?.length || 0;
     let completedFiles = 0;
+    const resetUpload = () => {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setIsSubmittingCar(false);
+    };
 
     if (totalFiles > 0) {
       for (const file of car.selectedFiles) {
@@ -441,16 +465,14 @@ function Admin() {
             newUrls.push(data.secure_url);
           } else {
             toast.error(`Erreur Cloudinary : ${data.error?.message || 'Upload échoué'}`);
-            setIsUploading(false);
-            setUploadProgress(0);
+            resetUpload();
             return;
           }
           completedFiles++;
           setUploadProgress((completedFiles / totalFiles) * 80);
         } catch (error) {
           toast.error('Erreur lors de l\'upload de l\'image');
-          setIsUploading(false);
-          setUploadProgress(0);
+          resetUpload();
           return;
         }
       }
@@ -487,12 +509,15 @@ function Admin() {
       fetchCars();
       toast.success('Voiture modifiée avec succès !');
     }
-    setIsUploading(false);
-    setUploadProgress(0);
+    resetUpload();
   };
 
   const handleAddPartner = async (e) => {
     e.preventDefault();
+    if (isSubmittingPartner) {
+      toast.info('Ajout du partenaire en cours...');
+      return;
+    }
     if (!isAdmin) {
       toast.error("Vous devez être admin pour ajouter un partenaire.");
       return;
@@ -501,6 +526,7 @@ function Admin() {
       toast.error("Veuillez remplir tous les champs.");
       return;
     }
+    setIsSubmittingPartner(true);
     const formData = new FormData();
     formData.append('file', newPartner.logoFile);
     formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
@@ -527,6 +553,8 @@ function Admin() {
       }
     } catch (error) {
       toast.error('Erreur lors de l\'upload du logo');
+    } finally {
+      setIsSubmittingPartner(false);
     }
   };
 
@@ -593,14 +621,16 @@ function Admin() {
         </button>
       </div>
       {isUploading && (
-        <div className="mb-6">
-          <div className="w-full bg-gray-700 rounded-full h-4">
-            <div
-              className="bg-gold h-4 rounded-full transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
-            ></div>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur border-b border-gray-700">
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="w-full bg-gray-700 rounded-full h-3">
+              <div
+                className="bg-gold h-3 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-white mt-2 text-sm">Progression : {Math.round(uploadProgress)}%</p>
           </div>
-          <p className="text-white mt-2">Progression : {Math.round(uploadProgress)}%</p>
         </div>
       )}
       <CarManagement
@@ -613,6 +643,8 @@ function Admin() {
         handleUpdateCar={handleUpdateCar}
         handleDeleteCar={handleDeleteCar}
         handleMarkAsSold={handleMarkAsSold}
+        isSubmittingCar={isSubmittingCar}
+        isUploading={isUploading}
       />
       <PartnerManagement
         partners={partners}
@@ -623,6 +655,7 @@ function Admin() {
         handleAddPartner={handleAddPartner}
         handleDeletePartner={handleDeletePartner}
         isAdmin={isAdmin}
+        isSubmittingPartner={isSubmittingPartner}
       />
     </div>
   );

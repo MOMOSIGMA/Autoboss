@@ -45,7 +45,7 @@ const PROMOTION_TYPES = [
   { value: "special", label: "Offre spéciale" },
 ];
 
-export default function CarForm({ onSubmit, initialData, setEditingCar }) {
+export default function CarForm({ onSubmit, initialData, setEditingCar, isSubmitting }) {
   const [car, setCar] = useState({
     marque: initialData?.marque || "",
     modele: initialData?.modele || "",
@@ -430,8 +430,11 @@ export default function CarForm({ onSubmit, initialData, setEditingCar }) {
           </div>
         ))}
       </div>
-      <button className="bg-gold text-black p-2 rounded-md mt-2 col-span-1 md:col-span-2 hover:bg-yellow-400 transition font-semibold">
-        {initialData ? "Modifier" : "Ajouter"}
+      <button
+        disabled={isSubmitting}
+        className={`bg-gold text-black p-2 rounded-md mt-2 col-span-1 md:col-span-2 transition font-semibold ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-yellow-400'}`}
+      >
+        {isSubmitting ? 'Traitement en cours...' : (initialData ? 'Modifier' : 'Ajouter')}
       </button>
 
       {previewUrl && createPortal(
