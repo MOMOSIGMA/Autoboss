@@ -2,99 +2,99 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://autoboss.vercel.app/</loc>
-    <lastmod>2025-06-03</lastmod>
+    <loc>https://voituressenegal.com/</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/achat</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/location</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/favorites</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/contact</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/achat</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://voituressenegal.com/terms-of-use</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/blog</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://voituressenegal.com/blog/conseils-pour-acheter-une-voiture-doccasion</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/location</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://voituressenegal.com/blog/comment-louer-une-voiture-au-senegal</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/favorites</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/renault-duster-2021-dakar/b0c269d9-1cdf-43f5-9af2-ab54c6ed1276</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/contact</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/chevrolet-trax-lt-2017-dakar/aebf99c6-0510-407b-9899-17d90caf5eac</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/terms-of-use</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/toyota-rav4-2019-dakar/0852559f-e159-4130-933a-87953bb873c5</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/blog</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/ford-ranger-2024-dakar/fe1ccfb2-d6fa-446a-aff6-7ba8e2115aaf</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/blog/conseils-pour-acheter-une-voiture-doccasion</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/mazda-cx-9-2017-dakar/02f52a12-4fa5-4005-a83d-c3fa60acafcc</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/blog/comment-louer-une-voiture-au-senegal</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/toyota-rav4-2017-dakar/6c2419e3-dac4-44d9-b6b9-fea631781a87</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://autoboss.vercel.app/voiture/renault-duster-2021-dakar/b0c269d9-1cdf-43f5-9af2-ab54c6ed1276</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/chevrolet-trax-lt-2017-dakar/aebf99c6-0510-407b-9899-17d90caf5eac</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/toyota-rav4-2019-dakar/0852559f-e159-4130-933a-87953bb873c5</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/ford-ranger-2024-dakar/fe1ccfb2-d6fa-446a-aff6-7ba8e2115aaf</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/mazda-cx-9-2017-dakar/02f52a12-4fa5-4005-a83d-c3fa60acafcc</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/toyota-rav4-2017-dakar/6c2419e3-dac4-44d9-b6b9-fea631781a87</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://autoboss.vercel.app/voiture/kia-sorento-2017-dakar/f49ff185-fa64-4cdf-ab28-f47257d3ffd8</loc>
-    <lastmod>2025-06-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <loc>https://voituressenegal.com/voiture/kia-sorento-2017-dakar/f49ff185-fa64-4cdf-ab28-f47257d3ffd8</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
