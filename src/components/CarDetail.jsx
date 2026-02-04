@@ -138,12 +138,12 @@ function CarDetail({ user }) {
     };
   }, [fullScreenOpen, modalOpen]);
 
-  // Dynamic SEO
+  // Dynamic SEO with Facebook optimization
   useSEO({
-    title: car ? `${car.marque} ${car.modele} ${car.annee} - ${formatPrice(car.prix)} | Autoboss` : 'Détails de la voiture | Autoboss',
+    title: car ? `${car.marque} ${car.modele} ${car.annee} - ${formatPrice(car.prix)} | Autoboss Sénégal` : 'Détails de la voiture | Autoboss',
     description: car ? `${car.marque} ${car.modele} ${car.annee} à ${car.ville}. ${car.type} - ${formatPrice(car.prix)}. ${car.description || ''}`.substring(0, 160) : 'Découvrez les détails de cette voiture',
-    image: car?.medias?.[0] || 'https://autoboss.sn/og-image.jpg',
-    url: `https://autoboss.sn/details/${id}`
+    image: car?.medias?.[0] ? transformCloudinaryUrl(car.medias[0]).replace('/w_800', '/w_1200') : 'https://voituressenegal.com/og-image.jpg',
+    url: `https://voituressenegal.com/voiture/${car?.marque?.toLowerCase().replace(/\s+/g, '-')}-${car?.modele?.toLowerCase().replace(/\s+/g, '-')}/${id}`
   });
 
   const handlePrevMedia = () => {

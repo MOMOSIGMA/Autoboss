@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 /**
  * Hook pour mettre à jour les meta tags dynamiquement
- * Améliore le SEO en adaptant le titre et la description par page
+ * Améliore le SEO et Facebook sharing
  */
 export const useSEO = ({ title, description, image, url }) => {
   const location = useLocation();
@@ -20,7 +20,7 @@ export const useSEO = ({ title, description, image, url }) => {
       metaDescription.setAttribute('content', description);
     }
 
-    // Update OG tags
+    // Update OG tags (Facebook)
     const ogTitle = document.querySelector('meta[property="og:title"]');
     if (ogTitle && title) {
       ogTitle.setAttribute('content', title);
@@ -38,7 +38,26 @@ export const useSEO = ({ title, description, image, url }) => {
 
     const ogImage = document.querySelector('meta[property="og:image"]');
     if (ogImage && image) {
-      ogImage.setAttribute('content', image);
+      // Ensure image is full URL and optimized for Facebook (1200x630)
+      const imageUrl = image.startsWith('http') ? image : `https://voituressenegal.com${image}`;
+      ogImage.setAttribute('content', imageUrl);
+    }
+
+    // Add og:image:width and og:image:height for better Facebook preview
+    let ogImageWidth = document.querySelector('meta[property="og:image:width"]');
+    if (!ogImageWidth) {
+      ogImageWidth = document.createElement('meta');
+      ogImageWidth.setAttribute('property', 'og:image:width');
+      ogImageWidth.setAttribute('content', '1200');
+      document.head.appendChild(ogImageWidth);
+    }
+
+    let ogImageHeight = document.querySelector('meta[property="og:image:height"]');
+    if (!ogImageHeight) {
+      ogImageHeight = document.createElement('meta');
+      ogImageHeight.setAttribute('property', 'og:image:height');
+      ogImageHeight.setAttribute('content', '630');
+      document.head.appendChild(ogImageHeight);
     }
 
     // Update Twitter Card
@@ -50,6 +69,12 @@ export const useSEO = ({ title, description, image, url }) => {
     const twitterDescription = document.querySelector('meta[name="twitter:description"]');
     if (twitterDescription && description) {
       twitterDescription.setAttribute('content', description);
+    }
+
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    if (twitterImage && image) {
+      const imageUrl = image.startsWith('http') ? image : `https://voituressenegal.com${image}`;
+      twitterImage.setAttribute('content', imageUrl);
     }
 
     // Update canonical URL
@@ -104,7 +129,7 @@ export const createProductSchema = (car) => ({
   },
   offers: {
     '@type': 'Offer',
-    url: `https://autoboss.sn/details/${car.id}`,
+    url: `https://voituressenegal.com/voiture/${car.marque?.toLowerCase().replace(/\s+/g, '-')}-${car.modele?.toLowerCase().replace(/\s+/g, '-')}/${car.id}`,
     priceCurrency: 'XOF',
     price: car.prix,
     availability: car.status === 'acheté' 
@@ -153,7 +178,7 @@ export const createItemListSchema = (cars, listName = 'Voitures disponibles') =>
     item: {
       '@type': 'Product',
       name: `${car.marque} ${car.modele}`,
-      url: `https://autoboss.sn/details/${car.id}`,
+      url: `https://voituressenegal.com/voiture/${car.marque?.toLowerCase().replace(/\s+/g, '-')}-${car.modele?.toLowerCase().replace(/\s+/g, '-')}/${car.id}`,
       image: car.medias?.[0],
       offers: {
         '@type': 'Offer',

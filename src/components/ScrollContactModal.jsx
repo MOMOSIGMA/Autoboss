@@ -114,6 +114,5 @@ function ScrollContactModal() {
     </div>
   );
 }
-}
 
 export default ScrollContactModal;
