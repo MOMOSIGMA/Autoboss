@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-firebase-config.js && vite build",
+    "build": "node scripts/generate-firebase-config.js && vite build && node scripts/prerender-cars.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-sitemap": "node scripts/generate-sitemap.js",
