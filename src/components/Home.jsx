@@ -227,14 +227,48 @@ function Home({ cars }) {
   return (
     <div className="container mx-auto p-4 pt-16 relative bg-gray-900 text-white min-h-screen" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       <Helmet>
-        <title>Autoboss - Voitures à Vendre et à Louer au Sénégal</title>
-        <meta name="description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
-        <meta name="keywords" content="voitures Sénégal, vendre voiture Dakar, louer voiture, Autoboss, voitures d'occasion" />
+        <title>Autoboss - Meilleures Voitures à Vendre & Louer au Sénégal | Dakar, Thiès</title>
+        <meta name="description" content="🚗 Autoboss: N°1 des voitures au Sénégal. Vente & location de véhicules neufs/occasion à Dakar, Thiès, Kaolack. Prix compétitifs, qualité garantie. Contactez-nous maintenant!" />
+        <meta name="keywords" content="voitures Sénégal, vendre voiture Dakar, louer voiture Thiès, voitures occasion Sénégal, achat voiture pas cher, location voiture Kaolack, Toyota Corolla Dakar, Peugeot 307 Sénégal, Autoboss" />
+        <meta name="author" content="Autoboss Sénégal" />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta property="og:title" content="Autoboss - Voitures à Vendre et à Louer au Sénégal" />
-        <meta property="og:description" content="Découvrez les meilleures voitures à vendre et à louer au Sénégal sur Autoboss. Filtres avancés, offres exclusives, et contact direct avec les vendeurs." />
+        <meta name="theme-color" content="#FFD700" />
+        
+        {/* Open Graph pour réseaux sociaux */}
+        <meta property="og:type" content="business.business" />
+        <meta property="og:title" content="Autoboss - Meilleures Voitures du Sénégal 🇸🇳" />
+        <meta property="og:description" content="Vente et location de voitures à Dakar, Thiès, Sénégal. Filtres avancés, offres exclusives, contact direct. +221 76 264 17 51" />
         <meta property="og:image" content="/logo.png" />
         <meta property="og:url" content={window.location.href} />
+        <meta property="og:site_name" content="Autoboss Sénégal" />
+        <meta property="og:locale" content="fr_SN" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Autoboss - Voitures au Sénégal" />
+        <meta name="twitter:description" content="Découvrez les meilleures offres de voitures à Dakar et Thiès" />
+        <meta name="twitter:image" content="/logo.png" />
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": "Autoboss Sénégal",
+            "image": "/logo.png",
+            "description": "Vente et location de voitures au Sénégal",
+            "url": "https://voituressenegal.com",
+            "telephone": "+221762641751",
+            "areaServed": ["SN"],
+            "priceRange": "5000000-50000000",
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "SN"
+            }
+          })}
+        </script>
+        
         {heroImages.map((image, index) => (
           <link key={index} rel="preload" href={image.url} as="image" />
         ))}

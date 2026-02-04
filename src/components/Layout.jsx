@@ -5,6 +5,8 @@ import ContactForm from './ContactForm';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import TermsOfUse from './TermsOfUse';
+import FloatingWhatsAppButton from './FloatingWhatsAppButton';
+import ScrollContactModal from './ScrollContactModal';
 import { toast } from 'react-toastify';
 
 const formatPrice = (price) => {
@@ -156,6 +158,8 @@ function Layout({ cars, user, handleSignOut }) {
         </main>
       </div>
       <Footer />
+      <FloatingWhatsAppButton />
+      <ScrollContactModal />
     </div>
   );
 }
